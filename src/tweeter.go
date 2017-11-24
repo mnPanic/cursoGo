@@ -27,9 +27,9 @@ func main() {
 
 			text := c.ReadLine()
 
-			tweet := domain.Tweet{User: user, Text: text}
+			tweet := domain.NewTweet(user, text)
 
-			service.PublishTweet(&tweet)
+			service.PublishTweet(tweet)
 
 			c.Print("Tweet sent\n")
 
@@ -46,7 +46,7 @@ func main() {
 
 			tweet := service.GetTweet()
 
-			c.Println(tweet)
+			c.Println(domain.GetTweet(tweet))
 
 			return
 		},
