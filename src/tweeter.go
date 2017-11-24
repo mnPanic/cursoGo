@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/abiosoft/ishell"
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/service"
+	"github.com/cursoGo/src/service"
 )
 
 func main() {
