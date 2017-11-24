@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/abiosoft/ishell"
+	"github.com/cursoGo/src/domain"
 	"github.com/cursoGo/src/service"
 )
 
@@ -18,11 +19,17 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
+			c.Print("Who are you? ")
+
+			user := c.ReadLine()
+
 			c.Print("Write your tweet: ")
 
-			tweet := c.ReadLine()
+			text := c.ReadLine()
 
-			service.PublishTweet(tweet)
+			tweet := domain.Tweet{User: user, Text: text}
+
+			service.PublishTweet(&tweet)
 
 			c.Print("Tweet sent\n")
 
