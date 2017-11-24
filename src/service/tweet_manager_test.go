@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"testing"
+
 	"github.com/cursoGo/src/service"
 )
 
@@ -10,7 +11,7 @@ func TestPublishedTweetIsSaved(t *testing.T) {
 
 	service.PublishTweet(tweet)
 
-	if service.Tweet != tweet {
+	if service.GetTweet() != tweet {
 		t.Error("Expected tweet is", tweet)
 	}
 }

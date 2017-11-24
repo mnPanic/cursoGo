@@ -1,7 +1,13 @@
 package service
 
-var Tweet string
+var tweet string
 
-func PublishTweet(tweet string) {
-	Tweet = tweet
+//GetTweet returns the tweet
+func GetTweet() string {
+	return tweet
+}
+
+//PublishTweet Publishes a tweet
+func PublishTweet(tw string) {
+	tweet = tw
 }
