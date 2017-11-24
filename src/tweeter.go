@@ -46,7 +46,7 @@ func main() {
 
 			tweet := service.GetTweet()
 
-			c.Println(domain.GetTweet(tweet))
+			c.Println(domain.StringTweet(tweet))
 
 			return
 		},

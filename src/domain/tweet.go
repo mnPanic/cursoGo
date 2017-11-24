@@ -16,8 +16,8 @@ func NewTweet(usr, txt string) *Tweet {
 	return &tw
 }
 
-//
-func GetTweet(tw Tweet) string {
-	st := tw.user + ": " + tw.text
+//StringTweet returns a tweet as a formatted string
+func StringTweet(tw Tweet) string {
+	st := tw.user + ": " + tw.text + ", " + tw.date.String()
 	return st
 }
