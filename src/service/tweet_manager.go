@@ -19,6 +19,16 @@ func GetTweet() domain.Tweet {
 	return tweets[len(tweets)-1]
 }
 
+//GetTimelineFromUser returns all tweets from one user
+func GetTimelineFromUser(user domain.User) (timeline []domain.Tweet) {
+	for _, t := range tweets {
+		if t.User.Name == user.Name {
+			timeline = append(timeline, t)
+		}
+	}
+	return
+}
+
 //InitializeService initializes the service
 func InitializeService() {
 	tweets = []domain.Tweet{}

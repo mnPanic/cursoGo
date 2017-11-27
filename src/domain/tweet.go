@@ -18,6 +18,7 @@ func NewTweet(usr User, txt string) *Tweet {
 
 //StringTweet returns a tweet as a formatted string
 func StringTweet(tw Tweet) string {
-	st := tw.User.Name + ": " + tw.Text + ", " + tw.Date.String()
+	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
+	st := tw.User.Name + ": " + tw.Text + ", " + date
 	return st
 }
