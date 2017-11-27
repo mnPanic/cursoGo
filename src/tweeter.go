@@ -61,13 +61,18 @@ func main() {
 	})
 
 	shell.AddCmd(&ishell.Cmd{
-		Name: "showTweets",
-		Help: "Shows all tweets",
+		Name: "timeline",
+		Help: "Shows timeline from user",
 		Func: func(c *ishell.Context) {
 
 			defer c.ShowPrompt(true)
 
-			tweets := service.GetTweets()
+			c.Print("What user do you want? ")
+
+			user := domain.NewUser(c.ReadLine())
+
+			tweets := service.GetTimelineFromUser(user)
+
 			for _, t := range tweets {
 				c.Println(domain.StringTweet(t))
 			}

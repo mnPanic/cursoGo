@@ -142,4 +142,45 @@ func TestCantPublishTweetWithUnregisteredUser(t *testing.T) {
 	if err.Error() != "User is not registered" {
 		t.Error("Expected error is 'User not registered'")
 	}
+
+}
+
+func TestCanRetrieveTimeline(t *testing.T) {
+
+	//Initialization
+	service.InitializeService()
+
+	var tweet, secondTweet, thirdTweet *domain.Tweet
+
+	user := domain.NewUser("Manuel")
+	service.Register(user)
+	secondUser := domain.NewUser("Gonzalo")
+	service.Register(secondUser)
+
+	text := "This is my first tweet"
+	secondText := "This is my second tweet"
+	thirdText := "This is a tweet"
+
+	tweet = domain.NewTweet(user, text)
+	secondTweet = domain.NewTweet(user, secondText)
+	thirdTweet = domain.NewTweet(secondUser, thirdText)
+
+	//Operation
+	service.PublishTweet(tweet)
+	service.PublishTweet(secondTweet)
+	service.PublishTweet(thirdTweet)
+
+	//Validation
+	publishedTweets := service.GetTimelineFromUser(user)
+
+	if len(publishedTweets) != 2 {
+		t.Errorf("Expected size is 2 but was %d", len(publishedTweets))
+		return
+	}
+
+	for _, tweet := range publishedTweets {
+		if tweet.User.Name != user.Name {
+			t.Errorf("Expected user is %s but was %s", user.Name, tweet.User.Name)
+		}
+	}
 }
