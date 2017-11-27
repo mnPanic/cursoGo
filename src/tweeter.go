@@ -62,17 +62,16 @@ func main() {
 
 	shell.AddCmd(&ishell.Cmd{
 		Name: "timeline",
-		Help: "Shows timeline from user",
+		Help: "Shows timeline from logged in user",
 		Func: func(c *ishell.Context) {
 
 			defer c.ShowPrompt(true)
 
-			c.Print("What user do you want? ")
-
-			user := domain.NewUser(c.ReadLine())
-
-			tweets := service.GetTimelineFromUser(user)
-
+			tweets, err := service.GetTimeline()
+			if err != nil {
+				c.Printf("Can't retrieve timeline, %s", err.Error())
+				return
+			}
 			for _, t := range tweets {
 				c.Println(domain.StringTweet(t))
 			}

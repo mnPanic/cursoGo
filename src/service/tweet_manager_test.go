@@ -196,7 +196,7 @@ func TestCanRetrieveTweetById(t *testing.T) {
 	text := "This is my first tweet"
 
 	tweet = domain.NewTweet(user, text)
-	//Operation
+	//Operations
 	err := service.PublishTweet(tweet)
 
 	if err != nil {
