@@ -13,6 +13,26 @@ func main() {
 	shell.Print("Type 'help' to know commands\n")
 
 	shell.AddCmd(&ishell.Cmd{
+		Name: "register",
+		Help: "Registers a new user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Pick a name: ")
+			user := domain.NewUser(c.ReadLine())
+			err := service.Register(user)
+			if err != nil {
+				c.Printf("Invalid name, %s", err.Error())
+				return
+			}
+			if service.IsRegistered(user) {
+				c.Print("Added successfully")
+			}
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
 		Name: "publishTweet",
 		Help: "Publishes a tweet",
 		Func: func(c *ishell.Context) {
@@ -21,7 +41,7 @@ func main() {
 
 			c.Print("Who are you? ")
 
-			user := c.ReadLine()
+			user := domain.NewUser(c.ReadLine())
 
 			c.Print("Write your tweet: ")
 
@@ -41,15 +61,16 @@ func main() {
 	})
 
 	shell.AddCmd(&ishell.Cmd{
-		Name: "showTweet",
-		Help: "Shows a tweet",
+		Name: "showTweets",
+		Help: "Shows all tweets",
 		Func: func(c *ishell.Context) {
 
 			defer c.ShowPrompt(true)
 
-			tweet := service.GetTweet()
-
-			c.Println(domain.StringTweet(tweet))
+			tweets := service.GetTweets()
+			for _, t := range tweets {
+				c.Println(domain.StringTweet(t))
+			}
 
 			return
 		},
