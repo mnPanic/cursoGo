@@ -7,6 +7,7 @@ import (
 )
 
 var tweets []domain.Tweet
+var users []domain.User
 
 //GetTweets returns all tweets
 func GetTweets() []domain.Tweet {
@@ -26,8 +27,8 @@ func InitializeService() {
 //PublishTweet Publishes a tweet
 func PublishTweet(tweetToPublish *domain.Tweet) error {
 
-	if tweetToPublish.User.Name == "" {
-		return fmt.Errorf("User is required")
+	if !IsRegistered(tweetToPublish.User) {
+		return fmt.Errorf("User is not registered")
 	}
 
 	if tweetToPublish.Text == "" {
@@ -40,4 +41,24 @@ func PublishTweet(tweetToPublish *domain.Tweet) error {
 
 	tweets = append(tweets, *tweetToPublish)
 	return nil
+}
+
+//Register register a user
+func Register(userToRegister domain.User) error {
+	if userToRegister.Name == "" {
+		return fmt.Errorf("Name is required")
+	}
+
+	users = append(users, userToRegister)
+	return nil
+}
+
+//IsRegistered verify that a user is registered
+func IsRegistered(user domain.User) bool {
+	for _, u := range users {
+		if u.Name == user.Name {
+			return true
+		}
+	}
+	return false
 }

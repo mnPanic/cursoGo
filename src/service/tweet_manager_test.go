@@ -23,13 +23,21 @@ func isValidTweet(t *testing.T, publishedTweet domain.Tweet, user domain.User, t
 
 func TestPublishedTweetIsSaved(t *testing.T) {
 	//Initialization
+	service.InitializeService()
+
 	var tweet *domain.Tweet
 	user := domain.NewUser("root")
+	service.Register(user)
+
 	text := "This is my first tweet"
 
 	tweet = domain.NewTweet(user, text)
 	//Operation
-	service.PublishTweet(tweet)
+	err := service.PublishTweet(tweet)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	//Validation
 	publishedTweet := service.GetTweet()
@@ -39,9 +47,12 @@ func TestPublishedTweetIsSaved(t *testing.T) {
 func TestTweetWithoutTextIsNotPublished(t *testing.T) {
 
 	//Initialization
+	service.InitializeService()
+
 	var tweet *domain.Tweet
 
 	user := domain.NewUser("Gonzalo")
+	service.Register(user)
 	var text string
 
 	tweet = domain.NewTweet(user, text)
@@ -68,6 +79,7 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	var tweet, secondTweet *domain.Tweet
 
 	user := domain.NewUser("Manuel")
+	service.Register(user)
 	text := "This is my first tweet"
 	secondText := "This is my second tweet"
 
@@ -92,4 +104,42 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 		return
 	}
 	isValidTweet(t, secondPublishedTweet, user, secondText)
+}
+
+func TestCanRegisterUser(t *testing.T) {
+
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("Gonza")
+	//Operation
+	service.Register(user)
+	//Validation
+	if !service.IsRegistered(user) {
+		t.Error("User did not get registered")
+	}
+}
+
+func TestCantPublishTweetWithUnregisteredUser(t *testing.T) {
+
+	//Initialization
+	service.InitializeService()
+
+	var tweet *domain.Tweet
+	user := domain.NewUser("root")
+	text := "This is my first tweet"
+
+	tweet = domain.NewTweet(user, text)
+
+	//Operation
+	err := service.PublishTweet(tweet)
+
+	//Validation
+	if err == nil {
+		t.Error("Expected error")
+		return
+	}
+
+	if err.Error() != "User is not registered" {
+		t.Error("Expected error is 'User not registered'")
+	}
 }
