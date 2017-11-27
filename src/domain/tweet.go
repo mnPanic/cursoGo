@@ -7,12 +7,21 @@ type Tweet struct {
 	User User
 	Text string
 	Date *time.Time
+	ID   int
+}
+
+var currentID = -1
+
+//GetNextID returns the id of the next tweet
+func getNextID() int {
+	currentID++
+	return (currentID)
 }
 
 //NewTweet creates a tweet
 func NewTweet(usr User, txt string) *Tweet {
 	now := time.Now()
-	tw := Tweet{User: usr, Text: txt, Date: &now}
+	tw := Tweet{User: usr, Text: txt, Date: &now, ID: getNextID()}
 	return &tw
 }
 

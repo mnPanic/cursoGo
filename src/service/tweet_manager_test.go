@@ -184,3 +184,38 @@ func TestCanRetrieveTimeline(t *testing.T) {
 		}
 	}
 }
+
+func TestCanRetrieveTweetById(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+
+	var tweet *domain.Tweet
+	user := domain.NewUser("root")
+	service.Register(user)
+
+	text := "This is my first tweet"
+
+	tweet = domain.NewTweet(user, text)
+	//Operation
+	err := service.PublishTweet(tweet)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	//Validation
+	publishedTweet, err := service.GetTweetByID(0)
+	isValidTweet(t, *publishedTweet, user, text)
+
+	_, err = service.GetTweetByID(5)
+
+	if err == nil {
+		t.Errorf("Expected error")
+		return
+	}
+
+	if err.Error() != "A tweet with that ID does not exist" {
+		t.Errorf("The expected error is 'A tweet with that ID does not exist', but was %s ",
+			err.Error())
+	}
+}

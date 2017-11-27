@@ -19,6 +19,16 @@ func GetTweet() domain.Tweet {
 	return tweets[len(tweets)-1]
 }
 
+//GetTweetByID returns the tweet that has that ID
+func GetTweetByID(id int) (*domain.Tweet, error) {
+	for _, tweet := range tweets {
+		if tweet.ID == id {
+			return &tweet, nil
+		}
+	}
+	return nil, fmt.Errorf("A tweet with that ID does not exist")
+}
+
 //GetTimelineFromUser returns all tweets from one user
 func GetTimelineFromUser(user domain.User) (timeline []domain.Tweet) {
 	for _, t := range tweets {
