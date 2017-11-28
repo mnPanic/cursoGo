@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 //Tweet is a tweet
 type Tweet struct {
@@ -12,17 +15,25 @@ type Tweet struct {
 
 var currentID = -1
 
-//GetNextID returns the id of the next tweet
+//getNextID returns the id of the next tweet
 func getNextID() int {
 	currentID++
 	return (currentID)
 }
 
+//ResetCurrentID serves as an initialization, resetting the current ID
+func ResetCurrentID() {
+	currentID = -1
+}
+
 //NewTweet creates a tweet
-func NewTweet(usr User, txt string) *Tweet {
+func NewTweet(usr User, txt string) (*Tweet, error) {
 	now := time.Now()
+	if len(txt) > 140 {
+		return nil, fmt.Errorf("Can't have more than 140 characters")
+	}
 	tw := Tweet{User: usr, Text: txt, Date: &now, ID: getNextID()}
-	return &tw
+	return &tw, nil
 }
 
 //StringTweet returns a tweet as a formatted string

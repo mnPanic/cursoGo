@@ -10,95 +10,12 @@ var tweets []domain.Tweet
 var users []domain.User
 var loggedInUser domain.User
 
-//Login logs the user in
-func Login(user domain.User) error {
-	if isLoggedIn() {
-		return fmt.Errorf("Already logged in")
-	}
-	if !IsRegistered(user) {
-		return fmt.Errorf("The user is not registered")
-	}
-
-	loggedInUser = user
-	return nil
-}
-
-//Logout logs the user out
-func Logout() {
-	loggedInUser = domain.User{Name: ""}
-}
-
-//isLoggedIn checks if there is a logged in user
-func isLoggedIn() bool {
-	return loggedInUser.Name != ""
-}
-
-//GetTweets returns all tweets
-func GetTweets() []domain.Tweet {
-	return tweets
-}
-
-//GetTweet returns the last published Tweet
-func GetTweet() domain.Tweet {
-	return tweets[len(tweets)-1]
-}
-
-//GetTweetByID returns the tweet that has that ID
-func GetTweetByID(id int) (*domain.Tweet, error) {
-	for _, tweet := range tweets {
-		if tweet.ID == id {
-			return &tweet, nil
-		}
-	}
-	return nil, fmt.Errorf("A tweet with that ID does not exist")
-}
-
-//GetTimelineFromUser returns all tweets from one user
-func getTimelineFromUser(user domain.User) (timeline []domain.Tweet) {
-	for _, t := range tweets {
-		if t.User.Name == user.Name {
-			timeline = append(timeline, t)
-		}
-	}
-	return
-}
-
-//GetTimeline returns the loggedInUser's timeline
-func GetTimeline() ([]domain.Tweet, error) {
-	if !isLoggedIn() {
-		return nil, fmt.Errorf("No user logged in")
-	}
-	return getTimelineFromUser(loggedInUser), nil
-}
-
 //InitializeService initializes the service
 func InitializeService() {
-	tweets = []domain.Tweet{}
-	users = []domain.User{}
+	tweets = make([]domain.Tweet, 0)
+	users = make([]domain.User, 0)
+	domain.ResetCurrentID()
 	Logout()
-}
-
-//PublishTweet Publishes a tweet
-func PublishTweet(tweetToPublish *domain.Tweet) error {
-
-	if !IsRegistered(tweetToPublish.User) {
-		return fmt.Errorf("User is not registered")
-	}
-
-	if loggedInUser.Name != tweetToPublish.User.Name {
-		return fmt.Errorf("You must be logged in to tweet")
-	}
-
-	if tweetToPublish.Text == "" {
-		return fmt.Errorf("Text is required")
-	}
-
-	if len(tweetToPublish.Text) > 140 {
-		return fmt.Errorf("Can't have more than 140 characters")
-	}
-
-	tweets = append(tweets, *tweetToPublish)
-	return nil
 }
 
 //Register register a user
@@ -123,4 +40,88 @@ func IsRegistered(user domain.User) bool {
 		}
 	}
 	return false
+}
+
+//Login logs the user in
+func Login(user domain.User) error {
+	if isLoggedIn() {
+		return fmt.Errorf("Already logged in")
+	}
+	if !IsRegistered(user) {
+		return fmt.Errorf("The user is not registered")
+	}
+
+	loggedInUser = user
+	return nil
+}
+
+//Logout logs the user out
+func Logout() error {
+	if !isLoggedIn() {
+		return fmt.Errorf("Not logged in")
+	}
+	loggedInUser = domain.User{Name: ""}
+	return nil
+}
+
+//isLoggedIn checks if there is a logged in user
+func isLoggedIn() bool {
+	return loggedInUser.Name != ""
+}
+
+//GetTweets returns all tweets.
+func GetTweets() []domain.Tweet {
+	return tweets
+}
+
+//GetTweet returns the last published Tweet
+func GetTweet() domain.Tweet {
+	return tweets[len(tweets)-1]
+}
+
+//GetTweetByID returns the tweet that has that ID
+func GetTweetByID(id int) (*domain.Tweet, error) {
+	for _, tweet := range tweets {
+		if tweet.ID == id {
+			return &tweet, nil
+		}
+	}
+	return nil, fmt.Errorf("A tweet with that ID does not exist")
+}
+
+//GetTimelineFromUser returns all tweets from one user
+func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
+	if !IsRegistered(user) {
+		return nil, fmt.Errorf("That user is not registered")
+	}
+
+	var timeline []domain.Tweet
+	for _, t := range tweets {
+		if t.User.Name == user.Name {
+			timeline = append(timeline, t)
+		}
+	}
+	return timeline, nil
+}
+
+//GetTimeline returns the loggedInUser's timeline
+func GetTimeline() ([]domain.Tweet, error) {
+	if !isLoggedIn() {
+		return nil, fmt.Errorf("No user logged in")
+	}
+	return GetTimelineFromUser(loggedInUser)
+}
+
+//PublishTweet Publishes a tweet
+func PublishTweet(tweetToPublish *domain.Tweet) error {
+	if loggedInUser.Name != tweetToPublish.User.Name {
+		return fmt.Errorf("You must be logged in to tweet")
+	}
+
+	if tweetToPublish.Text == "" {
+		return fmt.Errorf("Text is required")
+	}
+
+	tweets = append(tweets, *tweetToPublish)
+	return nil
 }

@@ -47,9 +47,14 @@ func main() {
 
 			text := c.ReadLine()
 
-			tweet := domain.NewTweet(user, text)
+			tweet, err := domain.NewTweet(user, text)
 
-			err := service.PublishTweet(tweet)
+			if err != nil {
+				c.Printf("Tweet not published, %s", err.Error())
+				return
+			}
+
+			err = service.PublishTweet(tweet)
 
 			if err != nil {
 				c.Printf("Tweet not published, %s", err.Error())
