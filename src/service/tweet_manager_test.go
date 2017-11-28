@@ -60,6 +60,30 @@ func TestCantLogInWithUnregisteredUser(t *testing.T) {
 
 }
 
+func TestCanGetLoggedInUser(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root")
+	service.Register(user)
+	service.Login(user)
+
+	//Operation
+	loggedInUser, _ := service.GetLoggedInUser()
+	//Validate
+	if user.Name != loggedInUser.Name {
+		t.Error("The loggedInUser and the user that logged in do not match")
+	}
+}
+
+func TestCantGetLoggedInUserIfNoOneLoggedIn(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	//Operation
+	_, err := service.GetLoggedInUser()
+	//Validate
+	validateExpectedError(t, err, "Not logged in")
+}
+
 func TestPublishedTweetIsSaved(t *testing.T) {
 	//Initialization
 	service.InitializeService()
