@@ -55,6 +55,14 @@ func Login(user domain.User) error {
 	return nil
 }
 
+//GetLoggedInUser returns the logged in user
+func GetLoggedInUser() (*domain.User, error) {
+	if !isLoggedIn() {
+		return nil, fmt.Errorf("Not logged in")
+	}
+	return &loggedInUser, nil
+}
+
 //Logout logs the user out
 func Logout() error {
 	if !isLoggedIn() {

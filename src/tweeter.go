@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/abiosoft/ishell"
 	"github.com/cursoGo/src/domain"
 	"github.com/cursoGo/src/service"
@@ -27,8 +29,41 @@ func main() {
 				return
 			}
 			if service.IsRegistered(user) {
-				c.Print("Added successfully")
+				c.Print("Registered successfully")
 			}
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "login",
+		Help: "Logs into twitter",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Insert name: ")
+			user := domain.NewUser(c.ReadLine())
+			err := service.Login(user)
+			if err != nil {
+				c.Printf("Invalid login, %s", err.Error())
+				return
+			}
+			c.Print("Login successfull")
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "logout",
+		Help: "Logs out of twitter",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+			err := service.Logout()
+			if err != nil {
+				c.Printf("Couldn't log out, %s", err.Error())
+				return
+			}
+			c.Print("Logged out")
 		},
 	})
 
@@ -39,18 +74,21 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			c.Print("Who are you? ")
-
-			user := domain.NewUser(c.ReadLine())
-
 			c.Print("Write your tweet: ")
 
 			text := c.ReadLine()
 
-			tweet, err := domain.NewTweet(user, text)
+			loggedInUser, err := service.GetLoggedInUser()
 
 			if err != nil {
-				c.Printf("Tweet not published, %s", err.Error())
+				c.Printf(err.Error())
+				return
+			}
+
+			tweet, err := domain.NewTweet(*loggedInUser, text)
+
+			if err != nil {
+				c.Printf("Invalid tweet, %s", err.Error())
 				return
 			}
 
@@ -78,9 +116,29 @@ func main() {
 				return
 			}
 			for _, t := range tweets {
-				c.Println(domain.StringTweet(t))
+				c.Println(t.ToString())
 			}
 
+			return
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "tweetByID",
+		Help: "Finds a tweet by its ID",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Write the ID of the tweet: ")
+			id, _ := strconv.Atoi(c.ReadLine())
+
+			tweet, err := service.GetTweetByID(id)
+			if err != nil {
+				c.Printf("Couldn't retrieve, %s", err.Error())
+				return
+			}
+			c.Printf(tweet.ToString())
 			return
 		},
 	})

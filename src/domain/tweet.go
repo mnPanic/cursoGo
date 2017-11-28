@@ -36,9 +36,9 @@ func NewTweet(usr User, txt string) (*Tweet, error) {
 	return &tw, nil
 }
 
-//StringTweet returns a tweet as a formatted string
-func StringTweet(tw Tweet) string {
+//ToString returns a formatted string of the tweet
+func (tw Tweet) ToString() string {
 	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
-	st := tw.User.Name + ": " + tw.Text + ", " + date
-	return st
+	formattedString := tw.User.Name + ": " + tw.Text + ", " + date
+	return formattedString
 }
