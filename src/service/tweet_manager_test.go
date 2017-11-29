@@ -158,7 +158,7 @@ func TestPublishedTweetIsSaved(t *testing.T) {
 	}
 
 	//Validation
-	publishedTweet := service.GetTweet()
+	publishedTweet, _ := service.GetTweet()
 	isValidTweet(t, publishedTweet, user, text)
 }
 
@@ -220,7 +220,7 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	service.PublishTweet(secondTweet)
 
 	//Validation
-	publishedTweets := service.GetTweets()
+	publishedTweets, _ := service.GetTimelineFromUser(user)
 
 	if len(publishedTweets) != 2 {
 		t.Errorf("Expected size is 2 but was %d", len(publishedTweets))

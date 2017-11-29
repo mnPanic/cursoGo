@@ -6,14 +6,12 @@ import (
 	"github.com/cursoGo/src/domain"
 )
 
-var tweets []domain.Tweet
-var users []domain.User
+var userTweets map[domain.User][]domain.Tweet
 var loggedInUser domain.User
 
 //InitializeService initializes the service
 func InitializeService() {
-	tweets = make([]domain.Tweet, 0)
-	users = make([]domain.User, 0)
+	userTweets = make(map[domain.User][]domain.Tweet)
 	domain.ResetCurrentID()
 	Logout()
 }
@@ -31,18 +29,14 @@ func Register(userToRegister domain.User) error {
 		return fmt.Errorf("The user is already registered")
 	}
 
-	users = append(users, userToRegister)
+	userTweets[userToRegister] = make([]domain.Tweet, 0)
 	return nil
 }
 
 //IsRegistered verifies that a user is registered
 func IsRegistered(user domain.User) bool {
-	for _, u := range users {
-		if u.Equals(user) {
-			return true
-		}
-	}
-	return false
+	_, ok := userTweets[user]
+	return ok
 }
 
 //Login logs the user in
@@ -80,21 +74,19 @@ func isLoggedIn() bool {
 	return loggedInUser.Name != ""
 }
 
-//GetTweets returns all tweets.
-func GetTweets() []domain.Tweet {
-	return tweets
-}
-
 //GetTweet returns the last published Tweet
-func GetTweet() domain.Tweet {
-	return tweets[len(tweets)-1]
+func GetTweet() (domain.Tweet, error) {
+	tw, err := GetTweetByID(domain.GetCurrentID())
+	return *tw, err
 }
 
 //GetTweetByID returns the tweet that has that ID
 func GetTweetByID(id int) (*domain.Tweet, error) {
-	for _, tweet := range tweets {
-		if tweet.ID == id {
-			return &tweet, nil
+	for _, tweets := range userTweets {
+		for _, tweet := range tweets {
+			if tweet.ID == id {
+				return &tweet, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("A tweet with that ID does not exist")
@@ -106,12 +98,7 @@ func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
 		return nil, fmt.Errorf("That user is not registered")
 	}
 
-	var timeline []domain.Tweet
-	for _, t := range tweets {
-		if t.User.Equals(user) {
-			timeline = append(timeline, t)
-		}
-	}
+	timeline := userTweets[user]
 	return timeline, nil
 }
 
@@ -133,6 +120,6 @@ func PublishTweet(tweetToPublish *domain.Tweet) error {
 		return fmt.Errorf("Text is required")
 	}
 
-	tweets = append(tweets, *tweetToPublish)
+	userTweets[tweetToPublish.User] = append(userTweets[tweetToPublish.User], *tweetToPublish)
 	return nil
 }
