@@ -378,3 +378,85 @@ func TestCantCreateTweetWithMoreThan140Characters(t *testing.T) {
 	//Validation
 	validateExpectedError(t, err, "Can't have more than 140 characters")
 }
+
+func TestCanCheckIfTweetExists(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root", "root")
+	service.Register(user)
+	service.Login(user)
+	tweet, _ := domain.NewTweet(user, "hola soy root")
+	service.PublishTweet(tweet)
+	//Operation
+	exists := service.TweetExists(*tweet)
+	//Validation
+	if !exists {
+		t.Error("The tweet should exist")
+	}
+}
+
+func TestCanDeleteTweet(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root", "root")
+	service.Register(user)
+	service.Login(user)
+	tweet, _ := domain.NewTweet(user, "Tweet 1")
+	tweet2, _ := domain.NewTweet(user, "Tweet 2")
+	service.PublishTweet(tweet)
+	service.PublishTweet(tweet2)
+	//Operation
+	service.DeleteTweetByID(tweet.ID)
+	//Validation
+	exists := service.TweetExists(*tweet)
+	if exists {
+		t.Error("Tweet shouldn't exist")
+	}
+}
+
+func TestCantDeleteNonExistentTweet(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	//Operation
+	user := domain.NewUser("useless", "user")
+	service.Register(user)
+	err := service.DeleteTweetByID(2)
+	//Validation
+	validateExpectedError(t, err, "Coudln't delete tweet, A tweet with that ID does not exist")
+}
+
+func TestCantDeleteATweetThatYouDidntPublish(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user1 := domain.NewUser("root", "root")
+	user2 := domain.NewUser("manu", "hunter2")
+	service.Register(user1)
+	service.Register(user2)
+	tweet, _ := domain.NewTweet(user1, "hola")
+
+	service.Login(user1)
+	service.PublishTweet(tweet)
+	service.Logout()
+
+	service.Login(user2)
+	//Operation
+	err := service.DeleteTweetByID(tweet.ID)
+	//Validation
+	validateExpectedError(t, err, "You can't delete a tweet that you didn't publish")
+}
+
+func TestCantDeleteATweetIfNotLoggedIn(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user1 := domain.NewUser("root", "root")
+	service.Register(user1)
+	tweet, _ := domain.NewTweet(user1, "hola")
+
+	service.Login(user1)
+	service.PublishTweet(tweet)
+	service.Logout()
+	//Operation
+	err := service.DeleteTweetByID(tweet.ID)
+	//Validation
+	validateExpectedError(t, err, "Coudln't delete tweet, Not logged in")
+}

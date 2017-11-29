@@ -123,3 +123,50 @@ func PublishTweet(tweetToPublish *domain.Tweet) error {
 	userTweets[tweetToPublish.User] = append(userTweets[tweetToPublish.User], *tweetToPublish)
 	return nil
 }
+
+//DeleteTweetByID deletes a tweet by its ID
+func DeleteTweetByID(id int) error {
+	tweet, err := GetTweetByID(id)
+	if err != nil {
+		return fmt.Errorf("Coudln't delete tweet, %s", err.Error())
+	}
+	user, err := GetLoggedInUser()
+	if err != nil {
+		return fmt.Errorf("Coudln't delete tweet, %s", err.Error())
+	}
+
+	if !tweet.User.Equals(*user) {
+		return fmt.Errorf("You can't delete a tweet that you didn't publish")
+	}
+	return deleteTweet(*tweet)
+}
+
+//DeleteTweet deletes a tweet
+func deleteTweet(tweet domain.Tweet) error {
+	tweets := userTweets[tweet.User]
+	tweets = deleteElementFromTweets(tweets, tweet)
+	userTweets[tweet.User] = tweets
+	return nil
+}
+
+func deleteElementFromTweets(slice []domain.Tweet, element domain.Tweet) []domain.Tweet {
+	var newTweets []domain.Tweet
+	for _, tweet := range slice {
+		if !tweet.Equals(element) {
+			newTweets = append(newTweets, tweet)
+		}
+	}
+	return newTweets
+}
+
+//TweetExists returns if a given tweet exists
+func TweetExists(tweet domain.Tweet) bool {
+	for _, tweets := range userTweets {
+		for _, tw := range tweets {
+			if tweet.Equals(tw) {
+				return true
+			}
+		}
+	}
+	return false
+}

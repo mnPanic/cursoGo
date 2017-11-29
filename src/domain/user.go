@@ -11,7 +11,7 @@ func NewUser(name, password string) User {
 }
 
 //Equals returns if two users are the same
-func (user1 User) Equals(user User) bool {
-	return (user1.Name == user.Name &&
-		user1.Password == user.Password)
+func (user User) Equals(other User) bool {
+	return (other.Name == user.Name &&
+		other.Password == user.Password)
 }

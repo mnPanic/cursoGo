@@ -42,10 +42,18 @@ func NewTweet(usr User, txt string) (*Tweet, error) {
 	return &tw, nil
 }
 
-//ToString returns a formatted string of the tweet
-func (tw Tweet) ToString() string {
-	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
+//String returns a formatted string of the tweet, implements Stringer
+func (tw Tweet) String() string {
+	//date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
 	id := strconv.Itoa(tw.ID)
-	formattedString := ("[" + id + "] " + tw.User.Name + ": " + tw.Text + ", " + "(" + date + ")")
+	formattedString := fmt.Sprintf("[%s] @%s: %s", id, tw.User.Name, tw.Text)
 	return formattedString
+}
+
+//Equals returns if two tweets are the same
+func (tw Tweet) Equals(other Tweet) bool {
+	return (tw.Date == other.Date &&
+		tw.ID == other.ID &&
+		tw.Text == other.Text &&
+		tw.User.Equals(other.User))
 }

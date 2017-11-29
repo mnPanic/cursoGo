@@ -147,7 +147,32 @@ func main() {
 				c.Printf("Couldn't retrieve, %s\n", err.Error())
 				return
 			}
-			c.Printf(tweet.ToString())
+			c.Print(tweet)
+			return
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "deleteTweet",
+		Help: "Deletes a tweet by its ID",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Which tweet do you want to delete?: ")
+
+			id := strconv.Itoa(c.ReadLine())
+			user, err := service.GetLoggedInUser()
+			if err != nil {
+				c.Printf("Coudln't delete tweet, %s\n", err.Error())
+				return
+			}
+			err = service.DeleteTweetByID(id)
+			if err != nil {
+				c.Printf("Coudln't delete tweet, %s\n", err.Error())
+				return
+			}
+			c.Print("Tweet deleted successfully")
 			return
 		},
 	})
