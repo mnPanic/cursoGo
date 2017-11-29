@@ -6,18 +6,21 @@ import (
 	"github.com/cursoGo/src/domain"
 )
 
-var userTweets map[domain.User][]domain.Tweet
-var loggedInUser domain.User
+//TweetManager is a tweet manager
+type TweetManager struct {
+	userTweets   map[domain.User][]domain.Tweet
+	loggedInUser domain.User
+}
 
-//InitializeService initializes the service
-func InitializeService() {
-	userTweets = make(map[domain.User][]domain.Tweet)
+//InitializeManager initializes the manager
+func (m *TweetManager) InitializeManager() {
+	m.userTweets = make(map[domain.User][]domain.Tweet)
 	domain.ResetCurrentID()
-	Logout()
+	m.Logout()
 }
 
 //Register register a user
-func Register(userToRegister domain.User) error {
+func (m *TweetManager) Register(userToRegister domain.User) error {
 	if userToRegister.Name == "" {
 		return fmt.Errorf("Invalid name")
 	}
@@ -25,64 +28,64 @@ func Register(userToRegister domain.User) error {
 		return fmt.Errorf("Invalid password")
 	}
 
-	if IsRegistered(userToRegister) {
+	if m.IsRegistered(userToRegister) {
 		return fmt.Errorf("The user is already registered")
 	}
 
-	userTweets[userToRegister] = make([]domain.Tweet, 0)
+	m.userTweets[userToRegister] = make([]domain.Tweet, 0)
 	return nil
 }
 
 //IsRegistered verifies that a user is registered
-func IsRegistered(user domain.User) bool {
-	_, ok := userTweets[user]
+func (m *TweetManager) IsRegistered(user domain.User) bool {
+	_, ok := m.userTweets[user]
 	return ok
 }
 
 //Login logs the user in
-func Login(user domain.User) error {
-	if isLoggedIn() {
+func (m *TweetManager) Login(user domain.User) error {
+	if m.isLoggedIn() {
 		return fmt.Errorf("Already logged in")
 	}
-	if !IsRegistered(user) {
+	if !m.IsRegistered(user) {
 		return fmt.Errorf("The user is not registered")
 	}
 
-	loggedInUser = user
+	m.loggedInUser = user
 	return nil
 }
 
 //GetLoggedInUser returns the logged in user
-func GetLoggedInUser() (*domain.User, error) {
-	if !isLoggedIn() {
+func (m *TweetManager) GetLoggedInUser() (*domain.User, error) {
+	if !m.isLoggedIn() {
 		return nil, fmt.Errorf("Not logged in")
 	}
-	return &loggedInUser, nil
+	return &m.loggedInUser, nil
 }
 
 //Logout logs the user out
-func Logout() error {
-	if !isLoggedIn() {
+func (m *TweetManager) Logout() error {
+	if !m.isLoggedIn() {
 		return fmt.Errorf("Not logged in")
 	}
-	loggedInUser = domain.User{}
+	m.loggedInUser = domain.User{}
 	return nil
 }
 
 //isLoggedIn checks if there is a logged in user
-func isLoggedIn() bool {
-	return loggedInUser.Name != ""
+func (m *TweetManager) isLoggedIn() bool {
+	return m.loggedInUser.Name != ""
 }
 
 //GetTweet returns the last published Tweet
-func GetTweet() (domain.Tweet, error) {
-	tw, err := GetTweetByID(domain.GetCurrentID())
+func (m *TweetManager) GetTweet() (domain.Tweet, error) {
+	tw, err := m.GetTweetByID(domain.GetCurrentID())
 	return *tw, err
 }
 
 //GetTweetByID returns the tweet that has that ID
-func GetTweetByID(id int) (*domain.Tweet, error) {
-	for _, tweets := range userTweets {
+func (m *TweetManager) GetTweetByID(id int) (*domain.Tweet, error) {
+	for _, tweets := range m.userTweets {
 		for _, tweet := range tweets {
 			if tweet.ID == id {
 				return &tweet, nil
@@ -93,26 +96,26 @@ func GetTweetByID(id int) (*domain.Tweet, error) {
 }
 
 //GetTimelineFromUser returns all tweets from one user
-func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
-	if !IsRegistered(user) {
+func (m *TweetManager) GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
+	if !m.IsRegistered(user) {
 		return nil, fmt.Errorf("That user is not registered")
 	}
 
-	timeline := userTweets[user]
+	timeline := m.userTweets[user]
 	return timeline, nil
 }
 
 //GetTimeline returns the loggedInUser's timeline
-func GetTimeline() ([]domain.Tweet, error) {
-	if !isLoggedIn() {
+func (m *TweetManager) GetTimeline() ([]domain.Tweet, error) {
+	if !m.isLoggedIn() {
 		return nil, fmt.Errorf("No user logged in")
 	}
-	return GetTimelineFromUser(loggedInUser)
+	return m.GetTimelineFromUser(m.loggedInUser)
 }
 
 //PublishTweet Publishes a tweet
-func PublishTweet(tweetToPublish *domain.Tweet) error {
-	if !loggedInUser.Equals(tweetToPublish.User) {
+func (m *TweetManager) PublishTweet(tweetToPublish *domain.Tweet) error {
+	if !m.loggedInUser.Equals(tweetToPublish.User) {
 		return fmt.Errorf("You must be logged in to tweet")
 	}
 
@@ -120,17 +123,21 @@ func PublishTweet(tweetToPublish *domain.Tweet) error {
 		return fmt.Errorf("Text is required")
 	}
 
-	userTweets[tweetToPublish.User] = append(userTweets[tweetToPublish.User], *tweetToPublish)
+	if m.TweetIsDuplicated(*tweetToPublish) {
+		return fmt.Errorf("Duplicate tweets are not allowed")
+	}
+
+	m.userTweets[tweetToPublish.User] = append(m.userTweets[tweetToPublish.User], *tweetToPublish)
 	return nil
 }
 
 //DeleteTweetByID deletes a tweet by its ID
-func DeleteTweetByID(id int) error {
-	tweet, err := GetTweetByID(id)
+func (m *TweetManager) DeleteTweetByID(id int) error {
+	tweet, err := m.GetTweetByID(id)
 	if err != nil {
 		return fmt.Errorf("Coudln't delete tweet, %s", err.Error())
 	}
-	user, err := GetLoggedInUser()
+	user, err := m.GetLoggedInUser()
 	if err != nil {
 		return fmt.Errorf("Coudln't delete tweet, %s", err.Error())
 	}
@@ -138,18 +145,18 @@ func DeleteTweetByID(id int) error {
 	if !tweet.User.Equals(*user) {
 		return fmt.Errorf("You can't delete a tweet that you didn't publish")
 	}
-	return deleteTweet(*tweet)
+	return m.deleteTweet(*tweet)
 }
 
 //DeleteTweet deletes a tweet
-func deleteTweet(tweet domain.Tweet) error {
-	tweets := userTweets[tweet.User]
-	tweets = deleteElementFromTweets(tweets, tweet)
-	userTweets[tweet.User] = tweets
+func (m *TweetManager) deleteTweet(tweet domain.Tweet) error {
+	tweets := m.userTweets[tweet.User]
+	tweets = m.deleteElementFromTweets(tweets, tweet)
+	m.userTweets[tweet.User] = tweets
 	return nil
 }
 
-func deleteElementFromTweets(slice []domain.Tweet, element domain.Tweet) []domain.Tweet {
+func (m *TweetManager) deleteElementFromTweets(slice []domain.Tweet, element domain.Tweet) []domain.Tweet {
 	var newTweets []domain.Tweet
 	for _, tweet := range slice {
 		if !tweet.Equals(element) {
@@ -159,14 +166,30 @@ func deleteElementFromTweets(slice []domain.Tweet, element domain.Tweet) []domai
 	return newTweets
 }
 
-//TweetExists returns if a given tweet exists
-func TweetExists(tweet domain.Tweet) bool {
-	for _, tweets := range userTweets {
+func (m *TweetManager) tweetAppearsByCriteria(tweet domain.Tweet, criteria func(domain.Tweet, domain.Tweet) bool) bool {
+	for _, tweets := range m.userTweets {
 		for _, tw := range tweets {
-			if tweet.Equals(tw) {
+			if criteria(tw, tweet) {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func isADuplicateOfCriteria(t1, t2 domain.Tweet) bool {
+	return t1.IsADuplicateOf(t2)
+}
+func isEqualToCriteria(t1, t2 domain.Tweet) bool {
+	return t1.Equals(t2)
+}
+
+//TweetIsDuplicated returns if a given tweet is duplicated
+func (m *TweetManager) TweetIsDuplicated(tweet domain.Tweet) bool {
+	return m.tweetAppearsByCriteria(tweet, isADuplicateOfCriteria)
+}
+
+//TweetExists returns if a given tweet exists
+func (m *TweetManager) TweetExists(tweet domain.Tweet) bool {
+	return m.tweetAppearsByCriteria(tweet, isEqualToCriteria)
 }

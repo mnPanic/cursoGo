@@ -57,3 +57,8 @@ func (tw Tweet) Equals(other Tweet) bool {
 		tw.Text == other.Text &&
 		tw.User.Equals(other.User))
 }
+
+//IsADuplicateOf returns if one tweet is a duplicate of another
+func (tw Tweet) IsADuplicateOf(other Tweet) bool {
+	return tw.Text == other.Text
+}
