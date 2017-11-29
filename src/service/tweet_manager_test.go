@@ -8,8 +8,8 @@ import (
 )
 
 func isValidTweet(t *testing.T, publishedTweet domain.Tweet, user domain.User, text string) bool {
-	if publishedTweet.User.Name != user.Name && publishedTweet.Text != text {
-		t.Errorf("Expected tweet is %s: %s \nbut is %s: %s",
+	if !publishedTweet.User.Equals(user) && publishedTweet.Text != text {
+		t.Errorf("Expected tweet is %s: %s \nbut was %s: %s",
 			user.Name, text, publishedTweet.User.Name, publishedTweet.Text)
 		return false
 	}
@@ -33,11 +33,55 @@ func validateExpectedError(t *testing.T, err error, expectedError string) {
 	}
 }
 
+func TestCanRegisterUser(t *testing.T) {
+
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root", "root")
+	//Operation
+	service.Register(user)
+	//Validation
+	if !service.IsRegistered(user) {
+		t.Error("User did not get registered")
+	}
+}
+
+func TestCantRegisterUserWithInvalidName(t *testing.T) {
+	//Initalization
+	service.InitializeService()
+	user := domain.NewUser("", "pass")
+	//Operation
+	err := service.Register(user)
+	//Validation
+	validateExpectedError(t, err, "Invalid name")
+}
+
+func TestCantRegisterUserWithInvalidPassword(t *testing.T) {
+	//Initalization
+	service.InitializeService()
+	user := domain.NewUser("name", "")
+	//Operation
+	err := service.Register(user)
+	//Validation
+	validateExpectedError(t, err, "Invalid password")
+}
+
+func TestCantRegisterSameUserMoreThanOnce(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root", "root")
+	//Operation
+	service.Register(user)
+	err := service.Register(user)
+	//Validation
+	validateExpectedError(t, err, "The user is already registered")
+}
+
 func TestCantLoginIfAlreadyLoggedIn(t *testing.T) {
 	//Initialization
 	service.InitializeService()
 
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 
@@ -50,7 +94,7 @@ func TestCantLoginIfAlreadyLoggedIn(t *testing.T) {
 func TestCantLogInWithUnregisteredUser(t *testing.T) {
 	//Initialization
 	service.InitializeService()
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 
 	//Operation
 	err := service.Login(user)
@@ -63,7 +107,7 @@ func TestCantLogInWithUnregisteredUser(t *testing.T) {
 func TestCanGetLoggedInUser(t *testing.T) {
 	//Initialization
 	service.InitializeService()
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 
@@ -84,12 +128,24 @@ func TestCantGetLoggedInUserIfNoOneLoggedIn(t *testing.T) {
 	validateExpectedError(t, err, "Not logged in")
 }
 
+func TestCantLogInWithIncorrectPassword(t *testing.T) {
+	//Initialization
+	service.InitializeService()
+	user := domain.NewUser("root", "root")
+	incorrectUser := domain.NewUser("root", "incorrectPassword")
+	service.Register(user)
+	//Operation
+	err := service.Login(incorrectUser)
+	//Validation
+	validateExpectedError(t, err, "The user is not registered")
+}
+
 func TestPublishedTweetIsSaved(t *testing.T) {
 	//Initialization
 	service.InitializeService()
 
 	var tweet *domain.Tweet
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 	text := "This is my first tweet"
@@ -111,7 +167,7 @@ func TestMustBeLoggedInToPublishTweet(t *testing.T) {
 	service.InitializeService()
 
 	var tweet *domain.Tweet
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 
 	text := "This is my first tweet"
@@ -129,7 +185,7 @@ func TestTweetWithoutTextIsNotPublished(t *testing.T) {
 
 	var tweet *domain.Tweet
 
-	user := domain.NewUser("Gonzalo")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 	var text string
@@ -150,7 +206,7 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 
 	var tweet, secondTweet *domain.Tweet
 
-	user := domain.NewUser("Manuel")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 	text := "This is my first tweet"
@@ -179,40 +235,6 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	isValidTweet(t, secondPublishedTweet, user, secondText)
 }
 
-func TestCanRegisterUser(t *testing.T) {
-
-	//Initialization
-	service.InitializeService()
-	user := domain.NewUser("Gonza")
-	//Operation
-	service.Register(user)
-	//Validation
-	if !service.IsRegistered(user) {
-		t.Error("User did not get registered")
-	}
-}
-
-func TestCantRegisterInvalidUser(t *testing.T) {
-	//Initalization
-	service.InitializeService()
-	var user domain.User
-	//Operation
-	err := service.Register(user)
-	//Validation
-	validateExpectedError(t, err, "Name is required")
-}
-
-func TestCantRegisterSameUserMoreThanOnce(t *testing.T) {
-	//Initialization
-	service.InitializeService()
-	user := domain.NewUser("Gonza")
-	//Operation
-	service.Register(user)
-	err := service.Register(user)
-	//Validation
-	validateExpectedError(t, err, "The user is already registered")
-}
-
 func TestCanRetrieveTimeline(t *testing.T) {
 
 	//Initialization
@@ -220,10 +242,10 @@ func TestCanRetrieveTimeline(t *testing.T) {
 
 	var tweet, secondTweet, thirdTweet *domain.Tweet
 
-	user := domain.NewUser("Manuel")
+	user := domain.NewUser("Manuel", "pw")
 	service.Register(user)
 
-	secondUser := domain.NewUser("Gonzalo")
+	secondUser := domain.NewUser("Gonzalo", "pw")
 	service.Register(secondUser)
 
 	text := "This is my first tweet"
@@ -265,7 +287,7 @@ func TestCantRetrieveTimelineWithoutLoggingIn(t *testing.T) {
 
 	var tweet *domain.Tweet
 
-	user := domain.NewUser("Manuel")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 
@@ -287,7 +309,7 @@ func TestCantRetrieveTimelineOfUnregisteredUser(t *testing.T) {
 	//Initialization
 	service.InitializeService()
 
-	user := domain.NewUser("Manuel")
+	user := domain.NewUser("root", "root")
 
 	//Operation
 	_, err := service.GetTimelineFromUser(user)
@@ -301,7 +323,7 @@ func TestCanRetrieveTweetById(t *testing.T) {
 	service.InitializeService()
 
 	var tweet *domain.Tweet
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 
@@ -324,7 +346,7 @@ func TestCantRetrieveTweetByNonExistentID(t *testing.T) {
 	service.InitializeService()
 
 	var tweet *domain.Tweet
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 
@@ -342,7 +364,7 @@ func TestCantCreateTweetWithMoreThan140Characters(t *testing.T) {
 	//Initialization
 	service.InitializeService()
 
-	user := domain.NewUser("root")
+	user := domain.NewUser("root", "root")
 	service.Register(user)
 	service.Login(user)
 	text := "Este es un texto muy largo que se supone" +

@@ -22,10 +22,15 @@ func main() {
 			defer c.ShowPrompt(true)
 
 			c.Print("Pick a name: ")
-			user := domain.NewUser(c.ReadLine())
+			name := c.ReadLine()
+
+			c.Print("Pick a password: ")
+			password := c.ReadLine()
+
+			user := domain.NewUser(name, password)
 			err := service.Register(user)
 			if err != nil {
-				c.Printf("Invalid name, %s\n", err.Error())
+				c.Printf("Couldn't register, %s\n", err.Error())
 				return
 			}
 			if service.IsRegistered(user) {
@@ -42,7 +47,12 @@ func main() {
 			defer c.ShowPrompt(true)
 
 			c.Print("Insert name: ")
-			user := domain.NewUser(c.ReadLine())
+			name := c.ReadLine()
+
+			c.Print("Insert password: ")
+			password := c.ReadLine()
+
+			user := domain.NewUser(name, password)
 			err := service.Login(user)
 			if err != nil {
 				c.Printf("Invalid login, %s\n", err.Error())

@@ -21,7 +21,10 @@ func InitializeService() {
 //Register register a user
 func Register(userToRegister domain.User) error {
 	if userToRegister.Name == "" {
-		return fmt.Errorf("Name is required")
+		return fmt.Errorf("Invalid name")
+	}
+	if userToRegister.Password == "" {
+		return fmt.Errorf("Invalid password")
 	}
 
 	if IsRegistered(userToRegister) {
@@ -32,10 +35,10 @@ func Register(userToRegister domain.User) error {
 	return nil
 }
 
-//IsRegistered verify that a user is registered
+//IsRegistered verifies that a user is registered
 func IsRegistered(user domain.User) bool {
 	for _, u := range users {
-		if u.Name == user.Name {
+		if u.Equals(user) {
 			return true
 		}
 	}
@@ -68,7 +71,7 @@ func Logout() error {
 	if !isLoggedIn() {
 		return fmt.Errorf("Not logged in")
 	}
-	loggedInUser = domain.User{Name: ""}
+	loggedInUser = domain.User{}
 	return nil
 }
 
@@ -105,7 +108,7 @@ func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
 
 	var timeline []domain.Tweet
 	for _, t := range tweets {
-		if t.User.Name == user.Name {
+		if t.User.Equals(user) {
 			timeline = append(timeline, t)
 		}
 	}
@@ -122,7 +125,7 @@ func GetTimeline() ([]domain.Tweet, error) {
 
 //PublishTweet Publishes a tweet
 func PublishTweet(tweetToPublish *domain.Tweet) error {
-	if loggedInUser.Name != tweetToPublish.User.Name {
+	if !loggedInUser.Equals(tweetToPublish.User) {
 		return fmt.Errorf("You must be logged in to tweet")
 	}
 
