@@ -25,11 +25,11 @@ func main() {
 			user := domain.NewUser(c.ReadLine())
 			err := service.Register(user)
 			if err != nil {
-				c.Printf("Invalid name, %s", err.Error())
+				c.Printf("Invalid name, %s\n", err.Error())
 				return
 			}
 			if service.IsRegistered(user) {
-				c.Print("Registered successfully")
+				c.Print("Registered successfully\n")
 			}
 		},
 	})
@@ -45,10 +45,10 @@ func main() {
 			user := domain.NewUser(c.ReadLine())
 			err := service.Login(user)
 			if err != nil {
-				c.Printf("Invalid login, %s", err.Error())
+				c.Printf("Invalid login, %s\n", err.Error())
 				return
 			}
-			c.Print("Login successfull")
+			c.Print("Login successfull\n")
 		},
 	})
 
@@ -60,10 +60,10 @@ func main() {
 			defer c.ShowPrompt(true)
 			err := service.Logout()
 			if err != nil {
-				c.Printf("Couldn't log out, %s", err.Error())
+				c.Printf("Couldn't log out\n, %s", err.Error())
 				return
 			}
-			c.Print("Logged out")
+			c.Print("Logged out\n")
 		},
 	})
 
@@ -88,14 +88,14 @@ func main() {
 			tweet, err := domain.NewTweet(*loggedInUser, text)
 
 			if err != nil {
-				c.Printf("Invalid tweet, %s", err.Error())
+				c.Printf("Invalid tweet, %s\n", err.Error())
 				return
 			}
 
 			err = service.PublishTweet(tweet)
 
 			if err != nil {
-				c.Printf("Tweet not published, %s", err.Error())
+				c.Printf("Tweet not published, %s\n", err.Error())
 			} else {
 				c.Print("Tweet sent\n")
 			}
@@ -112,13 +112,12 @@ func main() {
 
 			tweets, err := service.GetTimeline()
 			if err != nil {
-				c.Printf("Can't retrieve timeline, %s", err.Error())
+				c.Printf("Can't retrieve timeline, %s\n", err.Error())
 				return
 			}
 			for _, t := range tweets {
 				c.Println(t.ToString())
 			}
-
 			return
 		},
 	})
@@ -135,7 +134,7 @@ func main() {
 
 			tweet, err := service.GetTweetByID(id)
 			if err != nil {
-				c.Printf("Couldn't retrieve, %s", err.Error())
+				c.Printf("Couldn't retrieve, %s\n", err.Error())
 				return
 			}
 			c.Printf(tweet.ToString())
