@@ -13,6 +13,8 @@ func main() {
 	shell := ishell.New()
 	shell.SetPrompt("Tweeter >> ")
 	shell.Print("Type 'help' to know commands\n")
+	var manager service.TweetManager
+	manager.InitializeManager()
 
 	shell.AddCmd(&ishell.Cmd{
 		Name: "register",
@@ -28,12 +30,12 @@ func main() {
 			password := c.ReadLine()
 
 			user := domain.NewUser(name, password)
-			err := service.Register(user)
+			err := manager.Register(user)
 			if err != nil {
 				c.Printf("Couldn't register, %s\n", err.Error())
 				return
 			}
-			if service.IsRegistered(user) {
+			if manager.IsRegistered(user) {
 				c.Print("Registered successfully\n")
 			}
 		},
@@ -53,7 +55,7 @@ func main() {
 			password := c.ReadLine()
 
 			user := domain.NewUser(name, password)
-			err := service.Login(user)
+			err := manager.Login(user)
 			if err != nil {
 				c.Printf("Invalid login, %s\n", err.Error())
 				return
@@ -68,9 +70,9 @@ func main() {
 		Func: func(c *ishell.Context) {
 
 			defer c.ShowPrompt(true)
-			err := service.Logout()
+			err := manager.Logout()
 			if err != nil {
-				c.Printf("Couldn't log out\n, %s", err.Error())
+				c.Printf("Couldn't log out, %s\n", err.Error())
 				return
 			}
 			c.Print("Logged out\n")
@@ -88,7 +90,7 @@ func main() {
 
 			text := c.ReadLine()
 
-			loggedInUser, err := service.GetLoggedInUser()
+			loggedInUser, err := manager.GetLoggedInUser()
 
 			if err != nil {
 				c.Printf(err.Error())
@@ -102,7 +104,7 @@ func main() {
 				return
 			}
 
-			err = service.PublishTweet(tweet)
+			err = manager.PublishTweet(tweet)
 
 			if err != nil {
 				c.Printf("Tweet not published, %s\n", err.Error())
@@ -120,13 +122,13 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			tweets, err := service.GetTimeline()
+			tweets, err := manager.GetTimeline()
 			if err != nil {
 				c.Printf("Can't retrieve timeline, %s\n", err.Error())
 				return
 			}
 			for _, t := range tweets {
-				c.Println(t.ToString())
+				c.Println(t)
 			}
 			return
 		},
@@ -142,7 +144,7 @@ func main() {
 			c.Print("Write the ID of the tweet: ")
 			id, _ := strconv.Atoi(c.ReadLine())
 
-			tweet, err := service.GetTweetByID(id)
+			tweet, err := manager.GetTweetByID(id)
 			if err != nil {
 				c.Printf("Couldn't retrieve, %s\n", err.Error())
 				return
@@ -161,18 +163,13 @@ func main() {
 
 			c.Print("Which tweet do you want to delete?: ")
 
-			id := strconv.Itoa(c.ReadLine())
-			user, err := service.GetLoggedInUser()
+			id, _ := strconv.Atoi(c.ReadLine())
+			err := manager.DeleteTweetByID(id)
 			if err != nil {
 				c.Printf("Coudln't delete tweet, %s\n", err.Error())
 				return
 			}
-			err = service.DeleteTweetByID(id)
-			if err != nil {
-				c.Printf("Coudln't delete tweet, %s\n", err.Error())
-				return
-			}
-			c.Print("Tweet deleted successfully")
+			c.Print("Tweet deleted successfully\n")
 			return
 		},
 	})
