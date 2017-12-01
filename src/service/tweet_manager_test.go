@@ -155,20 +155,67 @@ func TestCantLogInWithIncorrectPassword(t *testing.T) {
 	validateExpectedError(t, err, "The user is not registered")
 }
 
+func TestCanCreateTextTweet(t *testing.T) {}
+func TestCantCreateTextTweetWithoutText(t *testing.T) {
+
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	var text string
+
+	tweet, _ := domain.NewTextTweet(user, text)
+
+	//Operation
+	err := manager.PublishTweet(tweet)
+
+	//Validation
+	validateExpectedError(t, err, "Text is required")
+}
+func TestCantCreateTextTweetWithMoreThan140Characters(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	text := "Este es un texto muy largo que se supone" +
+		"que haga fallar al test del tweet, ya que en el" +
+		"tweeter que estamos haciendo no se puede tweetear" +
+		"algo que tenga mas de 140 caracteres."
+
+	//Operation
+	_, err := domain.NewTextTweet(user, text)
+
+	//Validation
+	validateExpectedError(t, err, "Can't have more than 140 characters")
+}
+func TestCanCompareTwoTextTweets(t *testing.T) {}
+
+func TestCanCreateImageTweet(t *testing.T)                 {}
+func TestCanCompareTwoImageTweets(t *testing.T)            {}
+func TestCantCreateImageTweetWithoutImageURL(t *testing.T) {}
+
+func TestCanCreateQuoteTweet(t *testing.T)      {}
+func TestCanCompareTwoQuoteTweets(t *testing.T) {}
+
 //PUBLISHING TWEET TESTS
 func TestPublishedTweetIsSaved(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
 	manager.InitializeManager()
 
-	var tweet *domain.Tweet
 	user := domain.NewUser("root", "root")
 	manager.Register(user)
 	manager.Login(user)
 	text := "This is my first tweet"
-	tweet, _ = domain.NewTweet(user, text)
+	tweet, _ := domain.NewTextTweet(user, text)
 	//Operation
-	err := manager.PublishTweet(tweet)
+	err := manager.PublishTweet(*tweet)
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -189,33 +236,11 @@ func TestMustBeLoggedInToPublishTweet(t *testing.T) {
 	manager.Register(user)
 
 	text := "This is my first tweet"
-	tweet, _ = domain.NewTweet(user, text)
+	tweet, _ = domain.NewTextTweet(user, text)
 	//Operation
 	err := manager.PublishTweet(tweet)
 	validateExpectedError(t, err, "You must be logged in to tweet")
 
-}
-
-func TestTweetWithoutTextIsNotPublished(t *testing.T) {
-
-	//Initialization
-	var manager service.TweetManager
-	manager.InitializeManager()
-
-	var tweet *domain.Tweet
-
-	user := domain.NewUser("root", "root")
-	manager.Register(user)
-	manager.Login(user)
-	var text string
-
-	tweet, _ = domain.NewTweet(user, text)
-
-	//Operation
-	err := manager.PublishTweet(tweet)
-
-	//Validation
-	validateExpectedError(t, err, "Text is required")
 }
 
 func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
@@ -224,16 +249,14 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	var manager service.TweetManager
 	manager.InitializeManager()
 
-	var tweet, secondTweet *domain.Tweet
-
 	user := domain.NewUser("root", "root")
 	manager.Register(user)
 	manager.Login(user)
 	text := "This is my first tweet"
 	secondText := "This is my second tweet"
 
-	tweet, _ = domain.NewTweet(user, text)
-	secondTweet, _ = domain.NewTweet(user, secondText)
+	tweet, _ := domain.NewTextTweet(user, text)
+	secondTweet, _ := domain.NewTextTweet(user, secondText)
 
 	//Operation
 	manager.PublishTweet(tweet)
@@ -262,8 +285,6 @@ func TestCanRetrieveTimeline(t *testing.T) {
 	var manager service.TweetManager
 	manager.InitializeManager()
 
-	var tweet, secondTweet, thirdTweet *domain.Tweet
-
 	user := domain.NewUser("Manuel", "pw")
 	manager.Register(user)
 
@@ -274,9 +295,9 @@ func TestCanRetrieveTimeline(t *testing.T) {
 	secondText := "This is my second tweet"
 	thirdText := "This is a tweet"
 
-	tweet, _ = domain.NewTweet(user, text)
-	secondTweet, _ = domain.NewTweet(user, secondText)
-	thirdTweet, _ = domain.NewTweet(secondUser, thirdText)
+	tweet, _ := domain.NewTextTweet(user, text)
+	secondTweet, _ := domain.NewTextTweet(user, secondText)
+	thirdTweet, _ := domain.NewTextTweet(secondUser, thirdText)
 
 	manager.Login(secondUser)
 	manager.PublishTweet(thirdTweet)
@@ -315,7 +336,7 @@ func TestCantRetrieveTimelineWithoutLoggingIn(t *testing.T) {
 	manager.Login(user)
 
 	text := "This is my first tweet"
-	tweet, _ = domain.NewTweet(user, text)
+	tweet, _ = domain.NewTextTweet(user, text)
 
 	manager.PublishTweet(tweet)
 	manager.Logout()
@@ -356,7 +377,7 @@ func TestCanRetrieveTweetById(t *testing.T) {
 
 	text := "This is my first tweet"
 
-	tweet, _ = domain.NewTweet(user, text)
+	tweet, _ = domain.NewTextTweet(user, text)
 	//Operations
 	manager.PublishTweet(tweet)
 
@@ -380,7 +401,7 @@ func TestCantRetrieveTweetByNonExistentID(t *testing.T) {
 
 	text := "This is my first tweet"
 
-	tweet, _ = domain.NewTweet(user, text)
+	tweet, _ = domain.NewTextTweet(user, text)
 	//Operations
 	err := manager.PublishTweet(tweet)
 	_, err = manager.GetTweetByID(5)
@@ -388,30 +409,7 @@ func TestCantRetrieveTweetByNonExistentID(t *testing.T) {
 	validateExpectedError(t, err, "A tweet with that ID does not exist")
 }
 
-//NEWTWEET TESTS
-
-func TestCantCreateTweetWithMoreThan140Characters(t *testing.T) {
-	//Initialization
-	var manager service.TweetManager
-	manager.InitializeManager()
-
-	user := domain.NewUser("root", "root")
-	manager.Register(user)
-	manager.Login(user)
-	text := "Este es un texto muy largo que se supone" +
-		"que haga fallar al test del tweet, ya que en el" +
-		"tweeter que estamos haciendo no se puede tweetear" +
-		"algo que tenga mas de 140 caracteres."
-
-	//Operation
-	_, err := domain.NewTweet(user, text)
-
-	//Validation
-	validateExpectedError(t, err, "Can't have more than 140 characters")
-}
-
 //TWEETEXISTS TESTS
-
 func TestCanCheckIfTweetExists(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
@@ -419,7 +417,7 @@ func TestCanCheckIfTweetExists(t *testing.T) {
 	user := domain.NewUser("root", "root")
 	manager.Register(user)
 	manager.Login(user)
-	tweet, _ := domain.NewTweet(user, "hola soy root")
+	tweet, _ := domain.NewTextTweet(user, "hola soy root")
 	manager.PublishTweet(tweet)
 	//Operation
 	exists := manager.TweetExists(*tweet)
@@ -438,8 +436,8 @@ func TestCanDeleteTweet(t *testing.T) {
 	user := domain.NewUser("root", "root")
 	manager.Register(user)
 	manager.Login(user)
-	tweet, _ := domain.NewTweet(user, "Tweet 1")
-	tweet2, _ := domain.NewTweet(user, "Tweet 2")
+	tweet, _ := domain.NewTextTweet(user, "Tweet 1")
+	tweet2, _ := domain.NewTextTweet(user, "Tweet 2")
 	manager.PublishTweet(tweet)
 	manager.PublishTweet(tweet2)
 	//Operation
@@ -471,7 +469,7 @@ func TestCantDeleteATweetThatYouDidntPublish(t *testing.T) {
 	user2 := domain.NewUser("manu", "hunter2")
 	manager.Register(user1)
 	manager.Register(user2)
-	tweet, _ := domain.NewTweet(user1, "hola")
+	tweet, _ := domain.NewTextTweet(user1, "hola")
 
 	manager.Login(user1)
 	manager.PublishTweet(tweet)
@@ -490,7 +488,7 @@ func TestCantDeleteATweetIfNotLoggedIn(t *testing.T) {
 	manager.InitializeManager()
 	user1 := domain.NewUser("root", "root")
 	manager.Register(user1)
-	tweet, _ := domain.NewTweet(user1, "hola")
+	tweet, _ := domain.NewTextTweet(user1, "hola")
 
 	manager.Login(user1)
 	manager.PublishTweet(tweet)
@@ -502,7 +500,7 @@ func TestCantDeleteATweetIfNotLoggedIn(t *testing.T) {
 }
 
 //SPECIFIC TWEET TESTS
-
+/*
 func TestTextTweetPrintsUserAndText(t *testing.T) {
 
 	// Initialization
@@ -567,3 +565,4 @@ func TestCanGetAStringFromATweet(t *testing.T) {
 	}
 
 }
+*/
