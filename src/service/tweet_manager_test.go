@@ -7,6 +7,8 @@ import (
 	"github.com/cursoGo/src/service"
 )
 
+//UTILITY FUNCTIONS
+
 func isValidTweet(t *testing.T, publishedTweet domain.Tweet, user domain.User, text string) bool {
 	if !publishedTweet.User.Equals(user) && publishedTweet.Text != text {
 		t.Errorf("Expected tweet is %s: %s \nbut was %s: %s",
@@ -32,6 +34,8 @@ func validateExpectedError(t *testing.T, err error, expectedError string) {
 		return
 	}
 }
+
+//REGISTERING TEST
 
 func TestCanRegisterUser(t *testing.T) {
 
@@ -80,6 +84,8 @@ func TestCantRegisterSameUserMoreThanOnce(t *testing.T) {
 	//Validation
 	validateExpectedError(t, err, "The user is already registered")
 }
+
+//LOGIN TESTS
 
 func TestCantLoginIfAlreadyLoggedIn(t *testing.T) {
 	//Initialization
@@ -149,6 +155,7 @@ func TestCantLogInWithIncorrectPassword(t *testing.T) {
 	validateExpectedError(t, err, "The user is not registered")
 }
 
+//PUBLISHING TWEET TESTS
 func TestPublishedTweetIsSaved(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
@@ -211,21 +218,6 @@ func TestTweetWithoutTextIsNotPublished(t *testing.T) {
 	validateExpectedError(t, err, "Text is required")
 }
 
-func TestCantPublishDuplicatedTweet(t *testing.T) {
-	//Initialization
-	var manager service.TweetManager
-	manager.InitializeManager()
-	user := domain.NewUser("manu", "hunter2")
-	tweet, _ := domain.NewTweet(user, "hola")
-	manager.Register(user)
-	manager.Login(user)
-	manager.PublishTweet(tweet)
-	//Operation
-	err := manager.PublishTweet(tweet)
-	//Validation
-	validateExpectedError(t, err, "Duplicate tweets are not allowed")
-}
-
 func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 
 	//Initialization
@@ -263,6 +255,7 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	isValidTweet(t, secondPublishedTweet, user, secondText)
 }
 
+//TIMELINE TESTS
 func TestCanRetrieveTimeline(t *testing.T) {
 
 	//Initialization
@@ -349,6 +342,8 @@ func TestCantRetrieveTimelineOfUnregisteredUser(t *testing.T) {
 	validateExpectedError(t, err, "That user is not registered")
 }
 
+//TWEETBYIDTESTS
+
 func TestCanRetrieveTweetById(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
@@ -393,6 +388,8 @@ func TestCantRetrieveTweetByNonExistentID(t *testing.T) {
 	validateExpectedError(t, err, "A tweet with that ID does not exist")
 }
 
+//NEWTWEET TESTS
+
 func TestCantCreateTweetWithMoreThan140Characters(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
@@ -413,6 +410,8 @@ func TestCantCreateTweetWithMoreThan140Characters(t *testing.T) {
 	validateExpectedError(t, err, "Can't have more than 140 characters")
 }
 
+//TWEETEXISTS TESTS
+
 func TestCanCheckIfTweetExists(t *testing.T) {
 	//Initialization
 	var manager service.TweetManager
@@ -429,6 +428,8 @@ func TestCanCheckIfTweetExists(t *testing.T) {
 		t.Error("The tweet should exist")
 	}
 }
+
+//DELETETWEET TESTS
 
 func TestCanDeleteTweet(t *testing.T) {
 	//Initialization
@@ -498,4 +499,71 @@ func TestCantDeleteATweetIfNotLoggedIn(t *testing.T) {
 	err := manager.DeleteTweetByID(tweet.ID)
 	//Validation
 	validateExpectedError(t, err, "Coudln't delete tweet, Not logged in")
+}
+
+//SPECIFIC TWEET TESTS
+
+func TestTextTweetPrintsUserAndText(t *testing.T) {
+
+	// Initialization
+	tweet := domain.NewTextTweet("grupoesfera", "This is my tweet")
+
+	// Operation
+	text := tweet.PrintableTweet()
+
+	// Validation
+	expectedText := "@grupoesfera: This is my tweet"
+	if text != expectedText {
+		t.Errorf("The expected text is %s but was %s", expectedText, text)
+	}
+
+}
+
+func TestImageTweetPrintsUserTextAndImageURL(t *testing.T) {
+
+	// Initialization
+	tweet := domain.NewImageTweet("grupoesfera", "This is my image", "http://www.grupoesfera.com.ar/common/img/grupoesfera.png")
+
+	// Operation
+	text := tweet.PrintableTweet()
+
+	// Validation
+	expectedText := "@grupoesfera: This is my image http://www.grupoesfera.com.ar/common/img/grupoesfera.png"
+	if text != expectedText {
+		t.Errorf("The expected text is %s but was %s", expectedText, text)
+	}
+
+}
+
+func TestQuoteTweetPrintsUserTextAndQuotedTweet(t *testing.T) {
+
+	// Initialization
+	quotedTweet := domain.NewTextTweet("grupoesfera", "This is my tweet")
+	tweet := domain.NewQuoteTweet("nick", "Awesome", quotedTweet)
+
+	// Operation
+	text := tweet.PrintableTweet()
+
+	// Validation
+	expectedText := `@nick: Awesome "@grupoesfera: This is my tweet"`
+	if text != expectedText {
+		t.Errorf("The expected text is %s but was %s", expectedText, text)
+	}
+
+}
+
+func TestCanGetAStringFromATweet(t *testing.T) {
+
+	// Initialization
+	tweet := domain.NewTextTweet("grupoesfera", "This is my tweet")
+
+	// Operation
+	text := tweet.String()
+
+	// Validation
+	expectedText := "@grupoesfera: This is my tweet"
+	if text != expectedText {
+		t.Errorf("The expected text is %s but was %s", expectedText, text)
+	}
+
 }

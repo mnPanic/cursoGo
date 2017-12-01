@@ -123,10 +123,6 @@ func (m *TweetManager) PublishTweet(tweetToPublish *domain.Tweet) error {
 		return fmt.Errorf("Text is required")
 	}
 
-	if m.TweetIsDuplicated(*tweetToPublish) {
-		return fmt.Errorf("Duplicate tweets are not allowed")
-	}
-
 	m.userTweets[tweetToPublish.User] = append(m.userTweets[tweetToPublish.User], *tweetToPublish)
 	return nil
 }
@@ -177,8 +173,10 @@ func (m *TweetManager) tweetAppearsByCriteria(tweet domain.Tweet, criteria func(
 	return false
 }
 
+//Deprecated
 func isADuplicateOfCriteria(t1, t2 domain.Tweet) bool {
-	return t1.IsADuplicateOf(t2)
+	//return t1.IsADuplicateOf(t2)
+	return false
 }
 func isEqualToCriteria(t1, t2 domain.Tweet) bool {
 	return t1.Equals(t2)
