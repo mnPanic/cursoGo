@@ -169,18 +169,17 @@ func (m *TweetManager) tweetAppearsByCriteria(tweet domain.Tweeter, criteria fun
 }
 
 //Deprecated
-func isADuplicateOfCriteria(t1, t2 domain.Tweeter) bool {
-	//return t1.IsADuplicateOf(t2)
-	return false
-}
+//func isADuplicateOfCriteria(t1, t2 domain.Tweeter) bool {
+//return t1.IsADuplicateOf(t2)
+//}
 func isEqualToCriteria(t1, t2 domain.Tweeter) bool {
 	return t1.Equals(t2)
 }
 
-//TweetIsDuplicated returns if a given tweet is duplicated
-func (m *TweetManager) TweetIsDuplicated(tweet domain.Tweeter) bool {
-	return m.tweetAppearsByCriteria(tweet, isADuplicateOfCriteria)
-}
+//TweetIsDuplicated returns if a given tweet is duplicated.
+//func (m *TweetManager) TweetIsDuplicated(tweet domain.Tweeter) bool {
+//	return m.tweetAppearsByCriteria(tweet, isADuplicateOfCriteria)
+//}
 
 //TweetExists returns if a given tweet exists
 func (m *TweetManager) TweetExists(tweet domain.Tweeter) bool {

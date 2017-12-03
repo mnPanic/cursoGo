@@ -30,6 +30,7 @@ type Tweeter interface {
 	GetUser() User
 	GetID() int
 	GetDate() *time.Time
+	GetText() string
 }
 
 //TextTweet is a tweet that has just text
@@ -80,11 +81,11 @@ func (t TextTweet) String() string {
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t TextTweet) Equals(other TextTweet) bool {
-	return (t.date == other.date &&
-		t.id == other.id &&
-		t.user.Equals(other.user) &&
-		t.text == other.text)
+func (t TextTweet) Equals(other Tweeter) bool {
+	return (t.date == other.GetDate() &&
+		t.id == other.GetID() &&
+		t.user.Equals(other.GetUser()) &&
+		t.text == other.GetText())
 }
 
 //ImageTweet is a tweet that contains an image
@@ -96,12 +97,12 @@ type ImageTweet struct {
 //NewImageTweet returns a new ImageTweet
 func NewImageTweet(user User, text string, url string) (*ImageTweet, error) {
 	if url == "" {
-		return nil, fmt.Errorf("Cant publish an image tweet without an URL")
+		return nil, fmt.Errorf("Cant create an image tweet without an URL")
 	}
 
 	textTweet, err := NewTextTweet(user, text)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't publish ImageTweet, %s", err.Error())
+		return nil, fmt.Errorf("Couldn't create ImageTweet, %s", err.Error())
 	}
 
 	imageTweet := ImageTweet{TextTweet: *textTweet, imageURL: url}
