@@ -155,7 +155,7 @@ func TestPublishedTweetIsSaved(t *testing.T) {
 	text := "This is my first tweet"
 	tweet, _ := domain.NewTextTweet(user, text)
 	//Operation
-	err := manager.PublishTweet(*tweet)
+	err := manager.PublishTweet(tweet)
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -355,7 +355,7 @@ func TestCanCheckIfTweetExists(t *testing.T) {
 	tweet, _ := domain.NewTextTweet(user, "hola soy root")
 	manager.PublishTweet(tweet)
 	//Operation
-	exists := manager.TweetExists(*tweet)
+	exists := manager.TweetExists(tweet)
 	//Validation
 	if !exists {
 		t.Error("The tweet should exist")
@@ -378,7 +378,7 @@ func TestCanDeleteTweet(t *testing.T) {
 	//Operation
 	manager.DeleteTweetByID(tweet.GetID())
 	//Validation
-	exists := manager.TweetExists(*tweet)
+	exists := manager.TweetExists(tweet)
 	if exists {
 		t.Error("Tweet shouldn't exist")
 	}
@@ -454,7 +454,87 @@ func TestCanEditTweetText(t *testing.T) {
 		t.Error("Edited tweet text does not match")
 	}
 }
-func TestCantEditNonExistentTweet(t *testing.T)          {}
-func TestCantEditTweetIfNotLoggedIn(t *testing.T)        {}
-func TestCantEditTweetThatYouDidNotPublish(t *testing.T) {}
-func TestCantEditTweetWithInvalidText(t *testing.T)      {}
+func TestCantEditNonExistentTweet(t *testing.T) {
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	text := "sample"
+	tweet, _ := domain.NewTextTweet(user, text)
+	manager.PublishTweet(tweet)
+	newText := "modified sample"
+	//Operation
+	err := manager.EditTweetTextByID(4, newText)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Coudln't edit tweet, A tweet with that ID does not exist")
+}
+func TestCantEditTweetIfNotLoggedIn(t *testing.T) {
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	text := "sample"
+	tweet, _ := domain.NewTextTweet(user, text)
+	manager.PublishTweet(tweet)
+	newText := "modified sample"
+	manager.Logout()
+	//Operation
+	err := manager.EditTweetTextByID(tweet.GetID(), newText)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Coudln't edit tweet, Not logged in")
+}
+func TestCantEditTweetThatYouDidNotPublish(t *testing.T) {
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("root", "root")
+	otherUser := domain.NewUser("manu", "hunter2")
+	manager.Register(otherUser)
+	manager.Register(user)
+	manager.Login(user)
+	text := "sample"
+	tweet, _ := domain.NewTextTweet(user, text)
+	manager.PublishTweet(tweet)
+	newText := "modified sample"
+	manager.Logout()
+	manager.Login(otherUser)
+	//Operation
+	err := manager.EditTweetTextByID(tweet.GetID(), newText)
+	//Validation
+	utility.ValidateExpectedError(t, err, "You can't edit a tweet that you didn't publish")
+}
+func TestCantEditTweetWithEmptyText(t *testing.T) {
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	text := "sample"
+	tweet, _ := domain.NewTextTweet(user, text)
+	manager.PublishTweet(tweet)
+	invalidText := ""
+	//Operation
+	err := manager.EditTweetTextByID(tweet.GetID(), invalidText)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Coudln't edit tweet, Can't have no text")
+}
+
+func TestCantEditTextTweetWithLongText(t *testing.T) {
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("root", "root")
+	manager.Register(user)
+	manager.Login(user)
+	text := "sample"
+	tweet, _ := domain.NewTextTweet(user, text)
+	manager.PublishTweet(tweet)
+	invalidText := "Este es un texto muy largo que se supone" +
+		"que haga fallar al test del tweet, ya que en el" +
+		"tweeter que estamos haciendo no se puede tweetear" +
+		"algo que tenga mas de 140 caracteres."
+	//Operation
+	err := manager.EditTweetTextByID(tweet.GetID(), invalidText)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Coudln't edit tweet, Can't have more than 140 characters")
+}

@@ -54,29 +54,29 @@ func NewTextTweet(usr User, txt string) (*TextTweet, error) {
 }
 
 //GetUser returns the user that posted the tweet
-func (t TextTweet) GetUser() User {
+func (t *TextTweet) GetUser() User {
 	return t.user
 }
 
 //GetDate returns the date at which the tweet was posted
-func (t TextTweet) GetDate() *time.Time {
+func (t *TextTweet) GetDate() *time.Time {
 	return t.date
 }
 
 //GetID returns the ID of the tweet
-func (t TextTweet) GetID() int {
+func (t *TextTweet) GetID() int {
 	return t.id
 }
 
 //GetText returns the text of the text tweet
-func (t TextTweet) GetText() string {
+func (t *TextTweet) GetText() string {
 	return t.text
 }
 
 //SetText changes the text of a given tweet
-func (t TextTweet) SetText(newText string) error {
+func (t *TextTweet) SetText(newText string) error {
 	if newText == "" {
-		return fmt.Errorf("Tweet can't have no text")
+		return fmt.Errorf("Can't have no text")
 	}
 	if len(newText) > 140 {
 		return fmt.Errorf("Can't have more than 140 characters")
@@ -85,14 +85,14 @@ func (t TextTweet) SetText(newText string) error {
 	return nil
 }
 
-func (t TextTweet) String() string {
+func (t *TextTweet) String() string {
 	//date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
 	formattedString := fmt.Sprintf("[%d] @%s: %s", t.id, t.user, t.text)
 	return formattedString
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t TextTweet) Equals(other Tweeter) bool {
+func (t *TextTweet) Equals(other Tweeter) bool {
 	return (t.date == other.GetDate() &&
 		t.id == other.GetID() &&
 		t.user.Equals(other.GetUser()) &&
@@ -121,19 +121,19 @@ func NewImageTweet(user User, text string, url string) (*ImageTweet, error) {
 }
 
 //GetURL returns the URL of the imageTweet
-func (t ImageTweet) GetURL() string {
+func (t *ImageTweet) GetURL() string {
 	return t.imageURL
 }
 
 //String returns a formatted string of the ImageTweet
-func (t ImageTweet) String() string {
-	formattedString := fmt.Sprintf("%s\n%s", t.TextTweet, t.imageURL)
+func (t *ImageTweet) String() string {
+	formattedString := fmt.Sprintf("%s\n%s", &t.TextTweet, t.imageURL)
 	return formattedString
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t ImageTweet) Equals(other ImageTweet) bool {
-	return (t.TextTweet.Equals(other.TextTweet) &&
+func (t *ImageTweet) Equals(other ImageTweet) bool {
+	return (t.TextTweet.Equals(&other.TextTweet) &&
 		t.imageURL == other.imageURL)
 }
 
@@ -154,17 +154,17 @@ func NewQuoteTweet(user User, text string, quoted Tweeter) (*QuoteTweet, error) 
 }
 
 //GetQuotedTweet returns the quotedtweet of the QuoteTweet
-func (t QuoteTweet) GetQuotedTweet() Tweeter {
+func (t *QuoteTweet) GetQuotedTweet() Tweeter {
 	return t.quotedTweet
 }
 
 //String returns a formatted string of the QuoteTweet
-func (t QuoteTweet) String() string {
-	formattedString := fmt.Sprintf("%s %q", t.TextTweet, t.quotedTweet)
+func (t *QuoteTweet) String() string {
+	formattedString := fmt.Sprintf("%s %q", &t.TextTweet, t.quotedTweet)
 	return formattedString
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t QuoteTweet) Equals(other QuoteTweet) bool {
-	return (t.TextTweet.Equals(other.TextTweet) && t.quotedTweet.Equals(other.quotedTweet))
+func (t *QuoteTweet) Equals(other QuoteTweet) bool {
+	return (t.TextTweet.Equals(&other.TextTweet) && t.quotedTweet.Equals(other.quotedTweet))
 }

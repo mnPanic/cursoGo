@@ -1,0 +1,4 @@
+go tool pprof -svg service.test cpu.out > cpu_profile.svg
+go tool pprof -svg service.test mem.out > mem_profile.svg
+
+go test -cpuprofile cpu.out -memprofile mem.out -bench .

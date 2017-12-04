@@ -197,7 +197,7 @@ func (m *TweetManager) EditTweetTextByID(id int, newText string) error {
 func (m *TweetManager) editTweetText(t domain.Tweeter, text string) error {
 	err := t.SetText(text)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return fmt.Errorf("Coudln't edit tweet, %s", err.Error())
 	}
 	return nil
 }

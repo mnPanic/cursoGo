@@ -32,7 +32,7 @@ func TestCantCreateTextTweetWithoutText(t *testing.T) {
 	_, err := domain.NewTextTweet(user, text)
 
 	//Validation
-	utility.ValidateExpectedError(t, err, "Tweet can't have no text")
+	utility.ValidateExpectedError(t, err, "Can't have no text")
 }
 func TestCantCreateTextTweetWithMoreThan140Characters(t *testing.T) {
 	//Initialization
