@@ -168,20 +168,36 @@ func (m *TweetManager) tweetAppearsByCriteria(tweet domain.Tweeter, criteria fun
 	return false
 }
 
-//Deprecated
-//func isADuplicateOfCriteria(t1, t2 domain.Tweeter) bool {
-//return t1.IsADuplicateOf(t2)
-//}
 func isEqualToCriteria(t1, t2 domain.Tweeter) bool {
 	return t1.Equals(t2)
 }
 
-//TweetIsDuplicated returns if a given tweet is duplicated.
-//func (m *TweetManager) TweetIsDuplicated(tweet domain.Tweeter) bool {
-//	return m.tweetAppearsByCriteria(tweet, isADuplicateOfCriteria)
-//}
-
 //TweetExists returns if a given tweet exists
 func (m *TweetManager) TweetExists(tweet domain.Tweeter) bool {
 	return m.tweetAppearsByCriteria(tweet, isEqualToCriteria)
+}
+
+//EditTweetTextByID edits a given tweet by its ID
+func (m *TweetManager) EditTweetTextByID(id int, newText string) error {
+	tweet, err := m.GetTweetByID(id)
+	if err != nil {
+		return fmt.Errorf("Coudln't edit tweet, %s", err.Error())
+	}
+	user, err := m.GetLoggedInUser()
+	if err != nil {
+		return fmt.Errorf("Coudln't edit tweet, %s", err.Error())
+	}
+
+	if !tweet.GetUser().Equals(*user) {
+		return fmt.Errorf("You can't edit a tweet that you didn't publish")
+	}
+	return m.editTweetText(tweet, newText)
+}
+
+func (m *TweetManager) editTweetText(t domain.Tweeter, text string) error {
+	err := t.SetText(text)
+	if err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	return nil
 }

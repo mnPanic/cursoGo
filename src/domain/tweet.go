@@ -31,6 +31,7 @@ type Tweeter interface {
 	GetID() int
 	GetDate() *time.Time
 	GetText() string
+	SetText(string) error
 }
 
 //TextTweet is a tweet that has just text
@@ -43,14 +44,12 @@ type TextTweet struct {
 
 //NewTextTweet returns a new TextTweet
 func NewTextTweet(usr User, txt string) (*TextTweet, error) {
-	if txt == "" {
-		return nil, fmt.Errorf("Tweet can't have no text")
-	}
-	if len(txt) > 140 {
-		return nil, fmt.Errorf("Can't have more than 140 characters")
-	}
 	now := time.Now()
-	textTweet := TextTweet{user: usr, date: &now, id: getNextID(), text: txt}
+	textTweet := TextTweet{user: usr, date: &now, id: getNextID()}
+	err := textTweet.SetText(txt) //Invalid tweet texts handled at SetText
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
 	return &textTweet, nil
 }
 
@@ -72,6 +71,18 @@ func (t TextTweet) GetID() int {
 //GetText returns the text of the text tweet
 func (t TextTweet) GetText() string {
 	return t.text
+}
+
+//SetText changes the text of a given tweet
+func (t TextTweet) SetText(newText string) error {
+	if newText == "" {
+		return fmt.Errorf("Tweet can't have no text")
+	}
+	if len(newText) > 140 {
+		return fmt.Errorf("Can't have more than 140 characters")
+	}
+	t.text = newText
+	return nil
 }
 
 func (t TextTweet) String() string {
