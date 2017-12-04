@@ -86,10 +86,6 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			c.Print("Write your tweet: ")
-
-			text := c.ReadLine()
-
 			loggedInUser, err := manager.GetLoggedInUser()
 
 			if err != nil {
@@ -97,7 +93,24 @@ func main() {
 				return
 			}
 
-			tweet, err := domain.NewTweet(*loggedInUser, text)
+			c.Print("Write your tweet: ")
+
+			text := c.ReadLine()
+			c.Print("Add image? (y/n): ")
+			answer := c.ReadLine()
+			var tweet domain.Tweeter
+			switch answer {
+			case "y":
+				c.Print("Insert image URL: ")
+				url := c.ReadLine()
+
+				tweet, err = domain.NewImageTweet(*loggedInUser, text, url)
+			case "n":
+				tweet, err = domain.NewTextTweet(*loggedInUser, text)
+			default:
+				c.Printf("Invalid answer")
+				return
+			}
 
 			if err != nil {
 				c.Printf("Invalid tweet, %s\n", err.Error())
@@ -170,6 +183,25 @@ func main() {
 				return
 			}
 			c.Print("Tweet deleted successfully\n")
+			return
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "follow",
+		Help: "Follow a user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Who do you want to follow?: ")
+			userToFollow := c.ReadLine()
+			err := manager.FollowUser(userToFollow)
+			if err != nil {
+				c.Printf("%s, \n", err.Error())
+				return
+			}
+			c.Print("User followed successfully\n")
 			return
 		},
 	})

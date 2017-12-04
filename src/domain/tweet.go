@@ -132,9 +132,13 @@ func (t *ImageTweet) String() string {
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t *ImageTweet) Equals(other ImageTweet) bool {
-	return (t.TextTweet.Equals(&other.TextTweet) &&
-		t.imageURL == other.imageURL)
+func (t *ImageTweet) Equals(other Tweeter) bool {
+	castedTweet, castOk := other.(*ImageTweet)
+	if !castOk {
+		return false
+	}
+	return (t.TextTweet.Equals(&castedTweet.TextTweet) &&
+		t.imageURL == castedTweet.imageURL)
 }
 
 //QuoteTweet is a tweet that quotes another
@@ -165,6 +169,11 @@ func (t *QuoteTweet) String() string {
 }
 
 //Equals returns if a given TextTweet is the same as another
-func (t *QuoteTweet) Equals(other QuoteTweet) bool {
-	return (t.TextTweet.Equals(&other.TextTweet) && t.quotedTweet.Equals(other.quotedTweet))
+func (t *QuoteTweet) Equals(other Tweeter) bool {
+	castedTweet, castOk := other.(*QuoteTweet)
+	if !castOk {
+		return false
+	}
+	return (t.TextTweet.Equals(&castedTweet.TextTweet) &&
+		t.quotedTweet.Equals(castedTweet.quotedTweet))
 }

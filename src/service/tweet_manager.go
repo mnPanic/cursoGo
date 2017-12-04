@@ -233,20 +233,36 @@ func (m *TweetManager) editTweetText(t domain.Tweeter, text string) error {
 }
 
 //FollowUser follows a user
-func (m *TweetManager) FollowUser(userToFollow domain.User) error {
+func (m *TweetManager) FollowUser(userName string) error {
 	user, err := m.GetLoggedInUser()
 	if err != nil {
 		return fmt.Errorf("Coudln't follow user, %s", err.Error())
 	}
-	if !m.IsRegistered(userToFollow) {
-		return fmt.Errorf("Can't follow nonexistent user")
+	userToFollow, err := m.getUserByName(userName)
+
+	if err != nil {
+		return fmt.Errorf("Couldn't follow user, %s", err.Error())
 	}
-	if user.Equals(userToFollow) {
+	if user.Equals(*userToFollow) {
 		return fmt.Errorf("Can't follow yourself")
 	}
-	if user.IsFollowing(userToFollow) {
+	if user.IsFollowing(*userToFollow) {
 		return fmt.Errorf("Can't follow same user twice")
 	}
-	user.Follow(userToFollow)
+	user.Follow(*userToFollow)
 	return nil
+}
+
+func (m *TweetManager) getUserByName(name string) (*domain.User, error) {
+	for _, user := range m.users {
+		if user.Name == name {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("User not registered")
+}
+
+//QuoteTweet returns a new tweet that quotes the given tweet
+func QuoteTweet() {
+
 }

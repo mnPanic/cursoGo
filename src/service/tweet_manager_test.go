@@ -349,7 +349,7 @@ func TestCanRetrieveTimelineWithFollowedUsersTweets(t *testing.T) {
 	manager.Login(user)
 	manager.PublishTweet(tweet)
 	manager.PublishTweet(secondTweet)
-	manager.FollowUser(secondUser)
+	manager.FollowUser(secondUser.Name)
 
 	//Operation
 	publishedTweets, _ := manager.GetTimeline()
@@ -617,7 +617,7 @@ func TestCanFollowUser(t *testing.T) {
 	manager.Register(secondUser)
 	manager.Login(user)
 	//Operation
-	err := manager.FollowUser(secondUser)
+	err := manager.FollowUser(secondUser.Name)
 	if err != nil {
 		t.Errorf("Unexpected error, %s", err.Error())
 		return
@@ -639,9 +639,9 @@ func TestCantFollowNonexistentUser(t *testing.T) {
 	manager.Register(user)
 	manager.Login(user)
 	//Operation
-	err := manager.FollowUser(secondUser)
+	err := manager.FollowUser(secondUser.Name)
 	//Validation
-	utility.ValidateExpectedError(t, err, "Can't follow nonexistent user")
+	utility.ValidateExpectedError(t, err, "Couldn't follow user, User not registered")
 }
 func TestCantFollowIfNotLoggedIn(t *testing.T) {
 	//Initialization
@@ -649,7 +649,7 @@ func TestCantFollowIfNotLoggedIn(t *testing.T) {
 	manager.InitializeManager()
 	secondUser := domain.NewUser("gonza", "hunter3")
 	//Operation
-	err := manager.FollowUser(secondUser)
+	err := manager.FollowUser(secondUser.Name)
 	//Validation
 	utility.ValidateExpectedError(t, err, "Coudln't follow user, Not logged in")
 }
@@ -663,7 +663,7 @@ func TestCantFollowYourself(t *testing.T) {
 	manager.Register(user)
 	manager.Login(user)
 	//Operation
-	err := manager.FollowUser(user)
+	err := manager.FollowUser(user.Name)
 	//Validation
 	utility.ValidateExpectedError(t, err, "Can't follow yourself")
 }
@@ -679,8 +679,8 @@ func TestCantFollowSameUserTwice(t *testing.T) {
 	manager.Register(secondUser)
 	manager.Login(user)
 	//Operation
-	manager.FollowUser(secondUser)
-	err := manager.FollowUser(secondUser)
+	manager.FollowUser(secondUser.Name)
+	err := manager.FollowUser(secondUser.Name)
 	//Validation
 	utility.ValidateExpectedError(t, err, "Can't follow same user twice")
 }
