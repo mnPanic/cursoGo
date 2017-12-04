@@ -8,13 +8,15 @@ import (
 
 //TweetManager is a tweet manager
 type TweetManager struct {
-	userTweets   map[domain.User][]domain.Tweeter
+	users        []domain.User
+	userTweets   map[string][]domain.Tweeter
 	loggedInUser domain.User
 }
 
 //InitializeManager initializes the manager
 func (m *TweetManager) InitializeManager() {
-	m.userTweets = make(map[domain.User][]domain.Tweeter)
+	m.users = make([]domain.User, 0)
+	m.userTweets = make(map[string][]domain.Tweeter)
 	domain.ResetCurrentID()
 	m.Logout()
 }
@@ -31,15 +33,24 @@ func (m *TweetManager) Register(userToRegister domain.User) error {
 	if m.IsRegistered(userToRegister) {
 		return fmt.Errorf("The user is already registered")
 	}
-
-	m.userTweets[userToRegister] = make([]domain.Tweeter, 0)
+	m.users = append(m.users, userToRegister)
+	m.userTweets[userToRegister.Name] = make([]domain.Tweeter, 0)
 	return nil
 }
 
 //IsRegistered verifies that a user is registered
 func (m *TweetManager) IsRegistered(user domain.User) bool {
-	_, ok := m.userTweets[user]
+	_, ok := m.userTweets[user.Name]
 	return ok
+}
+
+func (m *TweetManager) validateLogin(user domain.User) bool {
+	for _, u := range m.users {
+		if u.Equals(user) {
+			return true
+		}
+	}
+	return false
 }
 
 //Login logs the user in
@@ -47,7 +58,7 @@ func (m *TweetManager) Login(user domain.User) error {
 	if m.isLoggedIn() {
 		return fmt.Errorf("Already logged in")
 	}
-	if !m.IsRegistered(user) {
+	if !m.validateLogin(user) {
 		return fmt.Errorf("The user is not registered")
 	}
 
@@ -95,13 +106,32 @@ func (m *TweetManager) GetTweetByID(id int) (domain.Tweeter, error) {
 	return nil, fmt.Errorf("A tweet with that ID does not exist")
 }
 
-//GetTimelineFromUser returns all tweets from one user
+//GetTweetsFromUser returns all tweets from one user
+func (m *TweetManager) GetTweetsFromUser(user domain.User) ([]domain.Tweeter, error) {
+	if !m.IsRegistered(user) {
+		return nil, fmt.Errorf("That user is not registered")
+	}
+
+	timeline := append(m.userTweets[user.Name])
+	return timeline, nil
+}
+
+func (m *TweetManager) getTweetsFromFollowing(user domain.User) []domain.Tweeter {
+	var tweets []domain.Tweeter
+	for _, followedUser := range user.Following {
+		followedUserTweets, _ := m.GetTweetsFromUser(followedUser)
+		tweets = append(tweets, followedUserTweets...)
+	}
+	return tweets
+}
+
+//GetTimelineFromUser returns all tweets from one user and who they are following
 func (m *TweetManager) GetTimelineFromUser(user domain.User) ([]domain.Tweeter, error) {
 	if !m.IsRegistered(user) {
 		return nil, fmt.Errorf("That user is not registered")
 	}
 
-	timeline := m.userTweets[user]
+	timeline := append(m.userTweets[user.Name], m.getTweetsFromFollowing(user)...)
 	return timeline, nil
 }
 
@@ -118,7 +148,7 @@ func (m *TweetManager) PublishTweet(tweetToPublish domain.Tweeter) error {
 	if !m.loggedInUser.Equals(tweetToPublish.GetUser()) {
 		return fmt.Errorf("You must be logged in to tweet")
 	}
-	m.userTweets[tweetToPublish.GetUser()] = append(m.userTweets[tweetToPublish.GetUser()], tweetToPublish)
+	m.userTweets[tweetToPublish.GetUser().Name] = append(m.userTweets[tweetToPublish.GetUser().Name], tweetToPublish)
 	return nil
 }
 
@@ -141,9 +171,9 @@ func (m *TweetManager) DeleteTweetByID(id int) error {
 
 //DeleteTweet deletes a tweet
 func (m *TweetManager) deleteTweet(tweet domain.Tweeter) error {
-	tweets := m.userTweets[tweet.GetUser()]
+	tweets := m.userTweets[tweet.GetUser().Name]
 	tweets = m.deleteElementFromTweets(tweets, tweet)
-	m.userTweets[tweet.GetUser()] = tweets
+	m.userTweets[tweet.GetUser().Name] = tweets
 	return nil
 }
 
@@ -199,5 +229,24 @@ func (m *TweetManager) editTweetText(t domain.Tweeter, text string) error {
 	if err != nil {
 		return fmt.Errorf("Coudln't edit tweet, %s", err.Error())
 	}
+	return nil
+}
+
+//FollowUser follows a user
+func (m *TweetManager) FollowUser(userToFollow domain.User) error {
+	user, err := m.GetLoggedInUser()
+	if err != nil {
+		return fmt.Errorf("Coudln't follow user, %s", err.Error())
+	}
+	if !m.IsRegistered(userToFollow) {
+		return fmt.Errorf("Can't follow nonexistent user")
+	}
+	if user.Equals(userToFollow) {
+		return fmt.Errorf("Can't follow yourself")
+	}
+	if user.IsFollowing(userToFollow) {
+		return fmt.Errorf("Can't follow same user twice")
+	}
+	user.Follow(userToFollow)
 	return nil
 }

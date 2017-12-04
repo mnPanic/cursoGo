@@ -202,7 +202,7 @@ func TestCanPublishAndRetriveMoreThanOneTweet(t *testing.T) {
 	manager.PublishTweet(secondTweet)
 
 	//Validation
-	publishedTweets, _ := manager.GetTimelineFromUser(user)
+	publishedTweets, _ := manager.GetTweetsFromUser(user)
 
 	if len(publishedTweets) != 2 {
 		t.Errorf("Expected size is 2 but was %d", len(publishedTweets))
@@ -285,6 +285,20 @@ func TestCantRetrieveTimelineWithoutLoggingIn(t *testing.T) {
 	utility.ValidateExpectedError(t, err, "No user logged in")
 }
 
+func TestCantGetTweetsOfUnregisteredUser(t *testing.T) {
+
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+
+	user := domain.NewUser("root", "root")
+	//Operation
+	_, err := manager.GetTweetsFromUser(user)
+
+	//Validation
+	utility.ValidateExpectedError(t, err, "That user is not registered")
+}
+
 func TestCantRetrieveTimelineOfUnregisteredUser(t *testing.T) {
 
 	//Initialization
@@ -298,6 +312,59 @@ func TestCantRetrieveTimelineOfUnregisteredUser(t *testing.T) {
 
 	//Validation
 	utility.ValidateExpectedError(t, err, "That user is not registered")
+}
+
+func TestCanRetrieveTimelineWithFollowedUsersTweets(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+
+	user := domain.NewUser("Manuel", "pw")
+	manager.Register(user)
+
+	secondUser := domain.NewUser("Gonzalo", "pw")
+	manager.Register(secondUser)
+
+	otherUser := domain.NewUser("name", "pw")
+	manager.Register(otherUser)
+
+	text := "This is my first tweet"
+	secondText := "This is my second tweet"
+	thirdText := "This is a tweet"
+	fourthText := "This should not be picked up"
+
+	tweet, _ := domain.NewTextTweet(user, text)
+	secondTweet, _ := domain.NewTextTweet(user, secondText)
+	thirdTweet, _ := domain.NewTextTweet(secondUser, thirdText)
+	fourthTweet, _ := domain.NewTextTweet(otherUser, fourthText)
+
+	manager.Login(otherUser)
+	manager.PublishTweet(fourthTweet)
+	manager.Logout()
+
+	manager.Login(secondUser)
+	manager.PublishTweet(thirdTweet)
+	manager.Logout()
+
+	manager.Login(user)
+	manager.PublishTweet(tweet)
+	manager.PublishTweet(secondTweet)
+	manager.FollowUser(secondUser)
+
+	//Operation
+	publishedTweets, _ := manager.GetTimeline()
+
+	//Validation
+	if len(publishedTweets) != 3 {
+		t.Errorf("Expected size is 3 but was %d", len(publishedTweets))
+		return
+	}
+
+	for _, tweet := range publishedTweets {
+		if !(tweet.GetUser().Equals(user) || tweet.GetUser().Equals(secondUser)) {
+			t.Errorf("Got unexpected user")
+		}
+	}
 }
 
 //TWEETBYIDTESTS
@@ -537,4 +604,83 @@ func TestCantEditTextTweetWithLongText(t *testing.T) {
 	err := manager.EditTweetTextByID(tweet.GetID(), invalidText)
 	//Validation
 	utility.ValidateExpectedError(t, err, "Coudln't edit tweet, Can't have more than 140 characters")
+}
+
+func TestCanFollowUser(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("manu", "hunter2")
+	secondUser := domain.NewUser("gonza", "hunter3")
+
+	manager.Register(user)
+	manager.Register(secondUser)
+	manager.Login(user)
+	//Operation
+	err := manager.FollowUser(secondUser)
+	if err != nil {
+		t.Errorf("Unexpected error, %s", err.Error())
+		return
+	}
+	//Validation
+	u, _ := manager.GetLoggedInUser()
+	following := u.IsFollowing(secondUser)
+	if !following {
+		t.Error("User not followed correctly")
+	}
+}
+func TestCantFollowNonexistentUser(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("manu", "hunter2")
+	secondUser := domain.NewUser("gonza", "hunter3")
+
+	manager.Register(user)
+	manager.Login(user)
+	//Operation
+	err := manager.FollowUser(secondUser)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Can't follow nonexistent user")
+}
+func TestCantFollowIfNotLoggedIn(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+	secondUser := domain.NewUser("gonza", "hunter3")
+	//Operation
+	err := manager.FollowUser(secondUser)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Coudln't follow user, Not logged in")
+}
+
+func TestCantFollowYourself(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("manu", "hunter2")
+
+	manager.Register(user)
+	manager.Login(user)
+	//Operation
+	err := manager.FollowUser(user)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Can't follow yourself")
+}
+
+func TestCantFollowSameUserTwice(t *testing.T) {
+	//Initialization
+	var manager service.TweetManager
+	manager.InitializeManager()
+	user := domain.NewUser("manu", "hunter2")
+	secondUser := domain.NewUser("gonza", "hunter3")
+
+	manager.Register(user)
+	manager.Register(secondUser)
+	manager.Login(user)
+	//Operation
+	manager.FollowUser(secondUser)
+	err := manager.FollowUser(secondUser)
+	//Validation
+	utility.ValidateExpectedError(t, err, "Can't follow same user twice")
 }
